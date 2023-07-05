@@ -11,28 +11,34 @@ const args = new URLSearchParams(location.search)
 const params = JSON.parse(args.get('q'))
 let focusedImage = null
 focusedImage = params?.focusedImage
+let viewerMode = focusedImage ? true : false
 
 
 const  createGallery = function  (imagesPerPage: number, imageApi: string) 
 {
 
     return {
+        viewerMode: viewerMode,
         currentPage: 1,
         imagesPerPage: imagesPerPage,
         imageApi: imageApi,
-        images: Array(150).fill({ url: 'https://via.placeholder.com/150', meta: {}}),
+      images: Array(150).fill({ url: 'https://via.placeholder.com/150', meta: {}}),
         totalPages: () => Math.ceil(this.images.length / this.imagesPerPage),
         multiSelectedImages: [],  
 
  
         async init()
         {   
- 
-            await this.fetchImages()
+           
+                await this.fetchImages()
+           
         },
 
         async fetchImages() {
-      
+            if (this.viewerMode)
+            {
+                return Promise.resolve()
+            }
       
             const response = await fetch('/api/v1/mercenaries/runscript/omni-core-filemanager:files');
             const data = await response.json();
@@ -51,6 +57,7 @@ const  createGallery = function  (imagesPerPage: number, imageApi: string)
             }
         },
         paginate() {
+    
             console.log('paginate')
             const start = (this.currentPage - 1) * this.imagesPerPage;
             const end = this.currentPage * this.imagesPerPage;
@@ -103,8 +110,7 @@ window.Alpine = Alpine
 document.addEventListener('alpine:init', async () => 
 Alpine.data('appState', () => ({
     createGallery,
-
-
+    
 })))
 
 

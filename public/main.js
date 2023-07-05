@@ -2996,8 +2996,10 @@ var args = new URLSearchParams(location.search);
 var params = JSON.parse(args.get("q"));
 var focusedImage = null;
 focusedImage = params?.focusedImage;
+var viewerMode = focusedImage ? true : false;
 var createGallery = function(imagesPerPage, imageApi) {
   return {
+    viewerMode,
     currentPage: 1,
     imagesPerPage,
     imageApi,
@@ -3008,6 +3010,9 @@ var createGallery = function(imagesPerPage, imageApi) {
       await this.fetchImages();
     },
     async fetchImages() {
+      if (this.viewerMode) {
+        return Promise.resolve();
+      }
       const response = await fetch("/api/v1/mercenaries/runscript/omni-core-filemanager:files");
       const data2 = await response.json();
       this.images = data2.images;
