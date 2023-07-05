@@ -22,7 +22,7 @@ const  createGallery = function  (imagesPerPage: number, imageApi: string)
         currentPage: 1,
         imagesPerPage: imagesPerPage,
         imageApi: imageApi,
-      images: Array(150).fill({ url: 'https://via.placeholder.com/150', meta: {}}),
+        images: viewerMode? [] :  Array(imagesPerPage).fill({ url: 'https://via.placeholder.com/150', meta: {}}),
         totalPages: () => Math.ceil(this.images.length / this.imagesPerPage),
         multiSelectedImages: [],  
 
