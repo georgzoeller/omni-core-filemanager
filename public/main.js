@@ -397,9 +397,9 @@ function injectMagics(obj, el) {
   });
   return obj;
 }
-function tryCatch(el, expression, callback, ...args) {
+function tryCatch(el, expression, callback, ...args2) {
   try {
-    return callback(...args);
+    return callback(...args2);
   } catch (e) {
     handleError(e, el, expression);
   }
@@ -426,8 +426,8 @@ function evaluate(el, expression, extras = {}) {
   evaluateLater(el, expression)((value) => result = value, extras);
   return result;
 }
-function evaluateLater(...args) {
-  return theEvaluatorFunction(...args);
+function evaluateLater(...args2) {
+  return theEvaluatorFunction(...args2);
 }
 var theEvaluatorFunction = normalEvaluator;
 function setEvaluator(newEvaluator) {
@@ -442,8 +442,8 @@ function normalEvaluator(el, expression) {
 }
 function generateEvaluatorFromFunction(dataStack, func) {
   return (receiver = () => {
-  }, { scope: scope2 = {}, params = [] } = {}) => {
-    let result = func.apply(mergeProxies([scope2, ...dataStack]), params);
+  }, { scope: scope2 = {}, params: params2 = [] } = {}) => {
+    let result = func.apply(mergeProxies([scope2, ...dataStack]), params2);
     runIfTypeOfFunction(receiver, result);
   };
 }
@@ -470,28 +470,28 @@ function generateFunctionFromString(expression, el) {
 function generateEvaluatorFromString(dataStack, expression, el) {
   let func = generateFunctionFromString(expression, el);
   return (receiver = () => {
-  }, { scope: scope2 = {}, params = [] } = {}) => {
+  }, { scope: scope2 = {}, params: params2 = [] } = {}) => {
     func.result = void 0;
     func.finished = false;
     let completeScope = mergeProxies([scope2, ...dataStack]);
     if (typeof func === "function") {
       let promise = func(func, completeScope).catch((error2) => handleError(error2, el, expression));
       if (func.finished) {
-        runIfTypeOfFunction(receiver, func.result, completeScope, params, el);
+        runIfTypeOfFunction(receiver, func.result, completeScope, params2, el);
         func.result = void 0;
       } else {
         promise.then((result) => {
-          runIfTypeOfFunction(receiver, result, completeScope, params, el);
+          runIfTypeOfFunction(receiver, result, completeScope, params2, el);
         }).catch((error2) => handleError(error2, el, expression)).finally(() => func.result = void 0);
       }
     }
   };
 }
-function runIfTypeOfFunction(receiver, value, scope2, params, el) {
+function runIfTypeOfFunction(receiver, value, scope2, params2, el) {
   if (shouldAutoEvaluateFunctions && typeof value === "function") {
-    let result = value.apply(scope2, params);
+    let result = value.apply(scope2, params2);
     if (result instanceof Promise) {
-      result.then((i) => runIfTypeOfFunction(receiver, i, scope2, params)).catch((error2) => handleError(error2, el, value));
+      result.then((i) => runIfTypeOfFunction(receiver, i, scope2, params2)).catch((error2) => handleError(error2, el, value));
     } else {
       receiver(result);
     }
@@ -683,8 +683,8 @@ function walk(el, callback) {
     node = node.nextElementSibling;
   }
 }
-function warn(message, ...args) {
-  console.warn(`Alpine Warning: ${message}`, ...args);
+function warn(message, ...args2) {
+  console.warn(`Alpine Warning: ${message}`, ...args2);
 }
 var started = false;
 function start() {
@@ -1153,10 +1153,10 @@ function modifierValue(modifiers, key, fallback) {
 var isCloning = false;
 function skipDuringClone(callback, fallback = () => {
 }) {
-  return (...args) => isCloning ? fallback(...args) : callback(...args);
+  return (...args2) => isCloning ? fallback(...args2) : callback(...args2);
 }
 function onlyDuringClone(callback) {
-  return (...args) => isCloning && callback(...args);
+  return (...args2) => isCloning && callback(...args2);
 }
 function clone(oldEl, newEl) {
   if (!newEl._x_dataStack)
@@ -1353,10 +1353,10 @@ function getAttributeBinding(el, name, fallback) {
 function debounce(func, wait) {
   var timeout;
   return function() {
-    var context = this, args = arguments;
+    var context = this, args2 = arguments;
     var later = function() {
       timeout = null;
-      func.apply(context, args);
+      func.apply(context, args2);
     };
     clearTimeout(timeout);
     timeout = setTimeout(later, wait);
@@ -1365,9 +1365,9 @@ function debounce(func, wait) {
 function throttle(func, limit) {
   let inThrottle;
   return function() {
-    let context = this, args = arguments;
+    let context = this, args2 = arguments;
     if (!inThrottle) {
-      func.apply(context, args);
+      func.apply(context, args2);
       inThrottle = true;
       setTimeout(() => inThrottle = false, limit);
     }
@@ -1409,8 +1409,8 @@ function injectBindingProviders(obj) {
   Object.entries(binds).forEach(([name, callback]) => {
     Object.defineProperty(obj, name, {
       get() {
-        return (...args) => {
-          return callback(...args);
+        return (...args2) => {
+          return callback(...args2);
         };
       }
     });
@@ -1445,8 +1445,8 @@ function injectDataProviders(obj, context) {
   Object.entries(datas).forEach(([name, callback]) => {
     Object.defineProperty(obj, name, {
       get() {
-        return (...args) => {
-          return callback.bind(context)(...args);
+        return (...args2) => {
+          return callback.bind(context)(...args2);
         };
       },
       enumerable: false
@@ -1742,14 +1742,14 @@ var shallowReadonlyGet = /* @__PURE__ */ createGetter(true, true);
 var arrayInstrumentations = {};
 ["includes", "indexOf", "lastIndexOf"].forEach((key) => {
   const method = Array.prototype[key];
-  arrayInstrumentations[key] = function(...args) {
+  arrayInstrumentations[key] = function(...args2) {
     const arr = toRaw(this);
     for (let i = 0, l = this.length; i < l; i++) {
       track(arr, "get", i + "");
     }
-    const res = method.apply(arr, args);
+    const res = method.apply(arr, args2);
     if (res === -1 || res === false) {
-      return method.apply(arr, args.map(toRaw));
+      return method.apply(arr, args2.map(toRaw));
     } else {
       return res;
     }
@@ -1757,9 +1757,9 @@ var arrayInstrumentations = {};
 });
 ["push", "pop", "shift", "unshift", "splice"].forEach((key) => {
   const method = Array.prototype[key];
-  arrayInstrumentations[key] = function(...args) {
+  arrayInstrumentations[key] = function(...args2) {
     pauseTracking();
-    const res = method.apply(this, args);
+    const res = method.apply(this, args2);
     resetTracking();
     return res;
   };
@@ -1979,13 +1979,13 @@ function createForEach(isReadonly, isShallow) {
   };
 }
 function createIterableMethod(method, isReadonly, isShallow) {
-  return function(...args) {
+  return function(...args2) {
     const target = this["__v_raw"];
     const rawTarget = toRaw(target);
     const targetIsMap = isMap(rawTarget);
     const isPair = method === "entries" || method === Symbol.iterator && targetIsMap;
     const isKeyOnly = method === "keys" && targetIsMap;
-    const innerIterator = target[method](...args);
+    const innerIterator = target[method](...args2);
     const wrap = isShallow ? toShallow : isReadonly ? toReadonly : toReactive;
     !isReadonly && track(rawTarget, "iterate", isKeyOnly ? MAP_KEY_ITERATE_KEY : ITERATE_KEY);
     return {
@@ -2003,9 +2003,9 @@ function createIterableMethod(method, isReadonly, isShallow) {
   };
 }
 function createReadonlyMethod(type) {
-  return function(...args) {
+  return function(...args2) {
     if (true) {
-      const key = args[0] ? `on key "${args[0]}" ` : ``;
+      const key = args2[0] ? `on key "${args2[0]}" ` : ``;
       console.warn(`${capitalize(type)} operation ${key}failed: target is readonly.`, toRaw(this));
     }
     return type === "delete" ? false : this;
@@ -2992,45 +2992,83 @@ var src_default = alpine_default;
 var module_default = src_default;
 
 // main.ts
-var ImageBrowserExtension = class {
-  constructor(endpoint, perPage) {
-    this.endpoint = endpoint;
-    this.perPage = perPage;
-    this.images = [];
-    this.currentPage = 1;
-    this.totalPage = 0;
-    this.focusedImage = null;
-  }
-  async loadImages() {
-    try {
-      this.images = Array.from({ length: this.perPage }, (_, i) => i + 1).map((i) => {
-        return { id: i, url: "https://via.placeholder.com/150", title: "Error loading image" };
-      });
-      return;
-      const response = await fetch(`${this.endpoint}?page=${this.currentPage}&limit=${this.perPage}`);
+var args = new URLSearchParams(location.search);
+var params = JSON.parse(args.get("q"));
+var focusedImage = null;
+focusedImage = params?.focusedImage;
+var createGallery = function(imagesPerPage, imageApi) {
+  return {
+    currentPage: 1,
+    imagesPerPage,
+    imageApi,
+    images: Array(150).fill({ url: "https://via.placeholder.com/150", meta: {} }),
+    totalPages: () => Math.ceil(this.images.length / this.imagesPerPage),
+    multiSelectedImages: [],
+    async init() {
+      await this.fetchImages();
+    },
+    async fetchImages() {
+      const response = await fetch("/api/v1/mercenaries/runscript/omni-core-filemanager:files");
       const data2 = await response.json();
       this.images = data2.images;
-      this.totalPage = data2.totalPage;
-    } catch (error2) {
-      console.error(error2);
-      this.images = [].concat([{ id: 1, url: "https://via.placeholder.com/150", title: "Error loading image" }, { id: 2, url: "https://via.placeholder.com/150", title: "Error loading image" }]);
+      this.totalPages = Math.ceil(this.images.length / this.imagesPerPage);
+    },
+    selectImage(img) {
+      const idx = this.multiSelectedImages.indexOf(img);
+      if (idx > -1) {
+        this.multiSelectedImages.splice(idx, 1);
+      } else {
+        this.multiSelectedImages.push(img);
+      }
+    },
+    paginate() {
+      console.log("paginate");
+      const start2 = (this.currentPage - 1) * this.imagesPerPage;
+      const end = this.currentPage * this.imagesPerPage;
+      return this.images.slice(start2, end);
+    },
+    nextImage() {
+      const currentIndex = this.images.indexOf(this.focusedImage);
+      if (currentIndex < this.images.length - 1) {
+        this.focusedImage = this.images[currentIndex + 1];
+      }
+    },
+    previousImage() {
+      const currentIndex = this.images.indexOf(this.focusedImage);
+      if (currentIndex > 0) {
+        this.focusedImage = this.images[currentIndex - 1];
+      }
+    },
+    nextPage() {
+      if (this.currentPage < this.totalPages) {
+        this.currentPage += 1;
+      }
+    },
+    hover: false,
+    mouseEnter() {
+      this.hover = true;
+    },
+    mouseLeave() {
+      this.hover = false;
+    },
+    focusedImage: focusedImage || null,
+    focusImage(img) {
+      this.focusedImage = img;
+      console.log("focusImage", img);
+    },
+    previousPage() {
+      if (this.currentPage > 1) {
+        this.currentPage -= 1;
+      }
     }
-  }
-  async next() {
-    if (this.currentPage < this.totalPage) {
-      this.currentPage++;
-      await this.loadImages();
-    }
-  }
-  async ready() {
-    await this.loadImages();
-  }
-  focusImage(image) {
-    this.focusedImage = image;
-  }
+  };
 };
 window.Alpine = module_default;
-var main_default = ImageBrowserExtension;
+document.addEventListener("alpine:init", async () => module_default.data("appState", () => ({
+  createGallery
+})));
+module_default.start();
+var main_default = {};
 export {
   main_default as default
 };

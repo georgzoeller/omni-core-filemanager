@@ -1,47 +1,115 @@
-
-
-class ImageBrowserExtension {
-    private images: Array<any> = [];
-    private currentPage: number = 1;
-    private totalPage: number = 0;
-    private focusedImage: any = null;
-
-    constructor(private endpoint: string, private perPage: number) {}
-
-
-    private async loadImages() {
-        try {
-            this.images = Array.from({length: this.perPage}, (_, i) => i + 1).map(i=>{return {id:i, url: 'https://via.placeholder.com/150', title: 'Error loading image'}});
-
-            return
-            const response = await fetch(`${this.endpoint}?page=${this.currentPage}&limit=${this.perPage}`);
-            const data = await response.json();
-            this.images = data.images;
-            this.totalPage = data.totalPage;
-        } catch(error) {
-            console.error(error);
-            this.images = [].concat([{id:1, url: 'https://via.placeholder.com/150', title: 'Error loading image'},{id:2, url: 'https://via.placeholder.com/150', title: 'Error loading image'}]);
-
-        }
-    }
-    public async next() {
-        if(this.currentPage < this.totalPage) {
-            this.currentPage++;
-            await this.loadImages();
-        }
-    }
-
-    public async ready() {
-        await this.loadImages();
-    }
-
-
-    public focusImage(image) {
-        this.focusedImage = image;
-    }
-}
 import Alpine from 'alpinejs'
-//@ts-expect-error
-window.Alpine = Alpine
 
-export default ImageBrowserExtension;
+declare global {
+  interface Window {
+
+    Alpine: typeof Alpine;
+  }
+}
+
+const args = new URLSearchParams(location.search)
+const params = JSON.parse(args.get('q'))
+let focusedImage = null
+focusedImage = params?.focusedImage
+
+
+const  createGallery = function  (imagesPerPage: number, imageApi: string) 
+{
+
+    return {
+        currentPage: 1,
+        imagesPerPage: imagesPerPage,
+        imageApi: imageApi,
+        images: Array(150).fill({ url: 'https://via.placeholder.com/150', meta: {}}),
+        totalPages: () => Math.ceil(this.images.length / this.imagesPerPage),
+        multiSelectedImages: [],  
+
+ 
+        async init()
+        {   
+ 
+            await this.fetchImages()
+        },
+
+        async fetchImages() {
+      
+      
+            const response = await fetch('/api/v1/mercenaries/runscript/omni-core-filemanager:files');
+            const data = await response.json();
+        
+ 
+            this.images = data.images;
+        
+            this.totalPages = Math.ceil(this.images.length / this.imagesPerPage);
+        },
+        selectImage(img) {
+            const idx = this.multiSelectedImages.indexOf(img);
+            if (idx > -1) {
+                this.multiSelectedImages.splice(idx, 1);  // Deselect the image if it's already selected
+            } else {
+                this.multiSelectedImages.push(img);  // Select the image
+            }
+        },
+        paginate() {
+            console.log('paginate')
+            const start = (this.currentPage - 1) * this.imagesPerPage;
+            const end = this.currentPage * this.imagesPerPage;
+            return this.images.slice(start, end);
+        },
+
+        nextImage() {
+            const currentIndex = this.images.indexOf(this.focusedImage);
+            if (currentIndex < this.images.length - 1) {
+                this.focusedImage = this.images[currentIndex + 1];
+            }
+        },
+        previousImage() {
+            const currentIndex = this.images.indexOf(this.focusedImage);
+            if (currentIndex > 0) {
+                this.focusedImage = this.images[currentIndex - 1];
+            }
+        },
+    
+        nextPage() {
+            if(this.currentPage < this.totalPages) {
+                this.currentPage += 1;
+            }
+        },
+        hover: false,
+        mouseEnter() {
+            this.hover = true;
+        },
+        mouseLeave() {
+            this.hover = false;
+        },
+        focusedImage: focusedImage || null,
+        focusImage(img) {
+            this.focusedImage = img;
+            console.log('focusImage', img)
+        },
+    
+        previousPage() {
+            if(this.currentPage > 1) {
+                this.currentPage -= 1;
+            }
+        }
+    }
+
+}
+
+
+
+window.Alpine = Alpine
+document.addEventListener('alpine:init', async () => 
+Alpine.data('appState', () => ({
+    createGallery,
+
+
+})))
+
+
+Alpine.start()
+
+;  // expose class to global scope so Alpine.js can access it
+
+export default {}
