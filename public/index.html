@@ -42,7 +42,7 @@
             
             <span class="flex-grow"></span>
             <button class="w-8 h-8 rounded-full shadow-md text-white shadow-black"
-              @click.stop="focusedImage = null">✖</button>
+              @click.stop="viewerMode ? window.parent.client.workbench.activeScreen ='editor' : focusedImage = null">✖</button>
           </div>
           <div
             class="absolute bottom-0 left-0 right-0 p-2 gap-5 bg-white bg-opacity-40 text-sm flex justify-between items-center h-8  ">
