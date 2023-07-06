@@ -24,48 +24,52 @@
           class="text-sm px-4 py-2 bg-slate-900 text-white rounded disabled:bg-gray-500">Back</button>
       </div>
 
-      <div x-show="focusedImage"
-        class="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-90 z-10"
-        @click="viewerMode ? window.parent.client.workbench.activeScreen ='editor' : focusedImage = null" @keydown.window.escape="viewerMode ? window.parent.client.workbench.activeScreen ='editor' : focusedImage = null"
-        @keydown.window.arrow-right="nextImage()" @keydown.window.arrow-left="previousImage()"
 
-        >
+      <div x-data="{ showInfo: false }" x-show="focusedImage"
+      class="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-90 z-10"
+      @click="viewerMode ? window.parent.client.workbench.activeScreen ='editor' : focusedImage = null" @keydown.window.escape="viewerMode ? window.parent.client.workbench.activeScreen ='editor' : focusedImage = null"
+      @keydown.window.arrow-right="nextImage()" @keydown.window.arrow-left="previousImage()" >
 
-        <div @click.stop="previousImage()"
-        x-show="!viewerMode"
-          class="w-8 h-full absolute top-0 left-0 flex items-center justify-center text-white text-4xl cursor-pointer">
-          ‹</div>
-        <div class="relative  flex items-center justify-center bg-black bg-opacity-50" style="max-width: 90vw; max-height: 90vh;" @click.stop
-          @contextmenu.prevent>
-          <img :src="focusedImage?.url" class="object-contain " style="max-width: 90vw; max-height: 90vh; ;" />
-          <div class="absolute top-0 left-0 right-0 p-2  text-sm flex justify-between items-center gap-5  bg-black bg-opacity-50 h-8 text-white drop-shadow-md shadow-black">
+      <div @click.stop="previousImage()" x-show="!viewerMode"
+        class="w-8 h-full absolute top-0 left-0 flex items-center justify-center text-white text-4xl cursor-pointer">‹</div>
 
-            <a  class='cursor-pointer' :href="focusedImage?.url+'?download=true'">📥</a>
-            <span  class='cursor-pointer  ' @click="await deleteByFid(focusedImage.ticket.fid)">🗑️</span>
+      <div class="relative flex items-center justify-center bg-black bg-opacity-50" style="max-width: 90vw; max-height: 90vh;"
+        @click.stop @contextmenu.prevent
+        @mouseenter="showInfo = true"
+        @mouseleave="showInfo = false">
 
-            <span class="flex-grow"></span>
-            <button class="w-8 h-8 rounded-full shadow-md text-white shadow-black"
-              @click.stop="viewerMode ? window.parent.client.workbench.activeScreen ='editor' : focusedImage = null">✖</button>
-          </div>
-          <div
+        <img :src="focusedImage?.url" class="object-contain " style="max-width: 90vw; max-height: 90vh; ;" />
 
-            class="absolute bottom-0 left-0 right-0 p-2 gap-5 font-semibold drop-shadow shadow-white bg-white bg-opacity-50 text-sm flex justify-between items-center h-8  ">
+        <div x-show="showInfo" class="absolute top-0 left-0 right-0 p-2 text-sm flex justify-between items-center gap-5 bg-black bg-opacity-50 h-8 text-white drop-shadow-md shadow-black">
 
-            <span><span class="font-semibold"></span> <span
-            x-text="focusedImage ? new Date(focusedImage.meta.created).toLocaleString(): ''"></span></span>
+          <a  class='cursor-pointer' :href="focusedImage?.url+'?download=true'">📥</a>
+          <button class="cursor-pointer active:animate-bounce" @click.stop="copyToClipboard(focusedImage?.url)">📋</button>
+          <span  class='cursor-pointer  ' @click="await deleteByFid(focusedImage.ticket.fid)">🗑️</span>
 
-
-        <span><span class="font-semibold"></span> <span
-            x-text="focusedImage?.meta.width + 'x' + focusedImage?.meta.height + 'px'"></span></span>
-            <span><span class="font-semibold"></span><span class="drop-shadow-md"
-            x-text="focusedImage?.fileName"></span></span>
-          </div>
+          <span class="flex-grow"></span>
+          <button class="w-8 h-8 rounded-full shadow-md text-white shadow-black"
+            @click.stop="viewerMode ? window.parent.client.workbench.activeScreen ='editor' : focusedImage = null">✖</button>
         </div>
-        <div @click.stop="nextImage()"
-          x-show="!viewerMode"
-          class="w-8 h-full absolute top-0 right-0 bg-black bg-opacity-50 flex items-center justify-center text-white text-4xl cursor-pointer">
-          ›</div>
+
+        <div x-show="showInfo" class="absolute bottom-0 left-0 right-0 p-2 gap-5 font-semibold drop-shadow shadow-white bg-white bg-opacity-50 text-sm flex justify-between items-center h-8">
+          <span><span class="font-semibold"></span> <span
+          x-text="focusedImage ? new Date(focusedImage.meta.created).toLocaleString(): ''"></span></span>
+
+
+      <span><span class="font-semibold"></span> <span
+          x-text="focusedImage?.meta.width + 'x' + focusedImage?.meta.height + 'px'"></span></span>
+          <span><span class="font-semibold"></span><span class="drop-shadow-md"
+          x-text="focusedImage?.fileName"></span></span>
+        </div>
+
       </div>
+
+      <div @click.stop="nextImage()" x-show="!viewerMode"
+        class="w-8 h-full absolute top-0 right-0 bg-black bg-opacity-50 flex items-center justify-center text-white text-4xl cursor-pointer">›</div>
+
+    </div>
+
+
 
 
       <div

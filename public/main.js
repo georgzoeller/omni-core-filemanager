@@ -3134,7 +3134,18 @@ var createGallery = function(imagesPerPage, imageApi) {
 };
 window.Alpine = module_default;
 document.addEventListener("alpine:init", async () => module_default.data("appState", () => ({
-  createGallery
+  createGallery,
+  async copyToClipboard(imgUrl) {
+    try {
+      const res = await fetch(imgUrl);
+      const blob = await res.blob();
+      const data2 = [new ClipboardItem({ [blob.type]: blob })];
+      await navigator.clipboard.write(data2);
+      alert("Image copied to clipboard");
+    } catch (err) {
+      console.error(err.name, err.message);
+    }
+  }
 })));
 module_default.start();
 var main_default = {};

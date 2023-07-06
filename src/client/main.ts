@@ -191,7 +191,18 @@ const  createGallery = function  (imagesPerPage: number, imageApi: string)
 window.Alpine = Alpine
 document.addEventListener('alpine:init', async () =>
 Alpine.data('appState', () => ({
-    createGallery
+    createGallery,
+    async copyToClipboard(imgUrl) {
+        try {
+          const res = await fetch(imgUrl);
+          const blob = await res.blob();
+          const data = [new ClipboardItem({ [blob.type]: blob })];
+          await navigator.clipboard.write(data);
+          alert('Image copied to clipboard');
+        } catch (err) {
+          console.error(err.name, err.message);
+        }
+      }
 
 
 })))
