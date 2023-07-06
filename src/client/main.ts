@@ -116,6 +116,10 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
             this.totalPages = Math.ceil(this.images.length / this.imagesPerPage);
         },
         selectImage(img) {
+            if (img.onclick)
+            {
+                return
+            }
             const idx = this.multiSelectedImages.indexOf(img);
             if (idx > -1) {
                 this.multiSelectedImages.splice(idx, 1);  // Deselect the image if it's already selected
