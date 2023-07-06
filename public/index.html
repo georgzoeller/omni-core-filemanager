@@ -17,7 +17,7 @@
 
 <body class="p-6 select-none overflow-hidden ">
   <div class="m-h-screen" x-data="appState">
-    <div x-data="createGallery(10 , '')" @keydown.escape.window="viewerMode ? window.parent.client.workbench.activeScreen ='editor' : focusedImage = null">
+    <div x-data="createGallery(28 , '')" @keydown.escape.window="viewerMode ? window.parent.client.workbench.activeScreen ='editor' : focusedImage = null">
 
       <div  x-show="!viewerMode" class="flex justify-between items-center mb-4 w-1/3 h-8">
         <button @click="window.parent.client.workbench.activeScreen ='editor'"
