@@ -3003,7 +3003,7 @@ var createGallery = function(imagesPerPage, imageApi) {
     currentPage: 1,
     imagesPerPage,
     imageApi,
-    images: Array(150).fill({ url: "https://via.placeholder.com/150", meta: {} }),
+    images: viewerMode ? [] : Array(imagesPerPage).fill({ url: "https://via.placeholder.com/150", meta: {} }),
     totalPages: () => Math.ceil(this.images.length / this.imagesPerPage),
     multiSelectedImages: [],
     async init() {

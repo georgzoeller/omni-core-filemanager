@@ -15,14 +15,15 @@ let viewerMode = focusedImage ? true : false
 
 
 const  createGallery = function  (imagesPerPage: number, imageApi: string) 
-{
+{   
+   
 
     return {
         viewerMode: viewerMode,
         currentPage: 1,
         imagesPerPage: imagesPerPage,
         imageApi: imageApi,
-        images: viewerMode? [] :  Array(imagesPerPage).fill({ url: 'https://via.placeholder.com/150', meta: {}}),
+        images: viewerMode ? [] :  Array(imagesPerPage).fill({ url: 'https://via.placeholder.com/150', meta: {}}),
         totalPages: () => Math.ceil(this.images.length / this.imagesPerPage),
         multiSelectedImages: [],  
 
