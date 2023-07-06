@@ -27,7 +27,8 @@ const script = {
     }))
 
     return {
-      deleted: payload.delete
+      deleted: payload.delete,
+      ok: true
     }
   }
 
