@@ -3003,19 +3003,52 @@ var createGallery = function(imagesPerPage, imageApi) {
     currentPage: 1,
     imagesPerPage,
     imageApi,
-    images: viewerMode ? [] : Array(imagesPerPage).fill({ url: "https://via.placeholder.com/150", meta: {} }),
+    images: viewerMode ? [] : Array(imagesPerPage + 1).fill({ url: "/ph_250.png", meta: {} }),
     totalPages: () => Math.ceil(this.images.length / this.imagesPerPage),
     multiSelectedImages: [],
+    hasImages: false,
+    cursor: null,
     async init() {
       await this.fetchImages();
     },
-    async fetchImages() {
+    async fetchImages(opts) {
       if (this.viewerMode) {
         return Promise.resolve();
       }
-      const response = await fetch("/api/v1/mercenaries/runscript/omni-core-filemanager:files");
+      const body = { limit: this.imagesPerPage };
+      if (opts?.cursor) {
+        body.cursor = opts?.cursor;
+      }
+      const response = await fetch(
+        "/api/v1/mercenaries/runscript/omni-core-filemanager:files",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(body)
+        }
+      );
       const data2 = await response.json();
-      this.images = data2.images;
+      let lastCursor = this.cursor;
+      if (data2.images) {
+        this.images = this.images.filter((item) => item.onclick == null);
+        if (this.hasImages += null) {
+          this.images = this.images.concat(data2.images);
+        } else {
+          this.images = data2.images;
+        }
+        this.cursor = this.images[this.images.length - 1].seq;
+      }
+      if (data2.images.length) {
+        this.hasImages = true;
+        let self = this;
+        if (lastCursor != this.cursor) {
+          this.images.push({ onclick: async () => {
+            await self.fetchImages({ cursor: self.cursor });
+          }, url: "/more.png", meta: {} });
+        }
+      }
       this.totalPages = Math.ceil(this.images.length / this.imagesPerPage);
     },
     selectImage(img) {
@@ -3027,10 +3060,7 @@ var createGallery = function(imagesPerPage, imageApi) {
       }
     },
     paginate() {
-      console.log("paginate");
-      const start2 = (this.currentPage - 1) * this.imagesPerPage;
-      const end = this.currentPage * this.imagesPerPage;
-      return this.images.slice(start2, end);
+      return this.images;
     },
     nextImage() {
       const currentIndex = this.images.indexOf(this.focusedImage);
@@ -3064,6 +3094,40 @@ var createGallery = function(imagesPerPage, imageApi) {
     previousPage() {
       if (this.currentPage > 1) {
         this.currentPage -= 1;
+      }
+    },
+    async deleteByFid(img) {
+      console.log("delete", img);
+      if (!Array.isArray(img)) {
+        img = [img];
+      }
+      let result = await fetch(
+        "/api/v1/mercenaries/runscript/omni-core-filemanager:delete",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ delete: img })
+        }
+      );
+      let data2 = await result.json();
+      if (!data2.ok) {
+        window.parent.client.sendSystemMessage("Failed to delete image(s) " + data2.error, "text/plain", {}, ["error"]);
+      }
+      if (data2.deleted) {
+        this.images = this.images.filter((img2) => {
+          console.log(img2);
+          if (img2.onclick != null)
+            return true;
+          let deleted = data2.deleted.includes(img2.ticket.fid);
+          return !deleted;
+        });
+        if (this.focusedImage) {
+          if (data2.deleted.includes(this.focusedImage.ticket.fid)) {
+            this.focusedImage = null;
+          }
+        }
       }
     }
   };

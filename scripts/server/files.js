@@ -3,13 +3,15 @@ const script = {
 
   exec: async function (ctx, payload) {
 
-    let limit = payload.pageSize || 50
+    let limit = payload.limit || 50
     let cursor = payload.cursor || undefined
 
 
+    console.log('files', payload, limit, cursor)
 
-
-    let images =  ctx.app.cdn.kvStorage.getAny('file.',undefined,{limit,cursor}).map((file) => { return file.value})
+    let images =  ctx.app.cdn.kvStorage.getAny('file.',undefined,{limit,cursor}).map((file) => {
+      return {...file.value, seq: file.seq}
+    })
 
 
     return {

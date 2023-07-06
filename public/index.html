@@ -17,7 +17,7 @@
 
 <body class="p-6 select-none overflow-hidden ">
   <div class="m-h-screen" x-data="appState">
-    <div x-data="createGallery(25, '')" @keydown.escape.window="viewerMode ? window.parent.client.workbench.activeScreen ='editor' : focusedImage = null">
+    <div x-data="createGallery(10 , '')" @keydown.escape.window="viewerMode ? window.parent.client.workbench.activeScreen ='editor' : focusedImage = null">
 
       <div  x-show="!viewerMode" class="flex justify-between items-center mb-4 w-1/3 h-8">
         <button @click="window.parent.client.workbench.activeScreen ='editor'"
@@ -27,7 +27,10 @@
       <div x-show="focusedImage"
         class="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-90 z-10"
         @click="viewerMode ? window.parent.client.workbench.activeScreen ='editor' : focusedImage = null" @keydown.window.escape="viewerMode ? window.parent.client.workbench.activeScreen ='editor' : focusedImage = null"
-        @keydown.window.arrow-right="nextImage()" @keydown.window.arrow-left="previousImage()">
+        @keydown.window.arrow-right="nextImage()" @keydown.window.arrow-left="previousImage()"
+
+        >
+
         <div @click.stop="previousImage()"
         x-show="!viewerMode"
           class="w-8 h-full absolute top-0 left-0 flex items-center justify-center text-white text-4xl cursor-pointer">
@@ -38,22 +41,24 @@
           <div class="absolute top-0 left-0 right-0 p-2  text-sm flex justify-between items-center gap-5  bg-black bg-opacity-50 h-8 text-white drop-shadow-md shadow-black">
 
             <a  class='cursor-pointer' :href="focusedImage?.url+'?download=true'">📥</a>
-            <span  class='cursor-pointer  ' @click="alert('not implemented yet')">🗑️</span>
-            
+            <span  class='cursor-pointer  ' @click="await deleteByFid(focusedImage.ticket.fid)">🗑️</span>
+
             <span class="flex-grow"></span>
             <button class="w-8 h-8 rounded-full shadow-md text-white shadow-black"
               @click.stop="viewerMode ? window.parent.client.workbench.activeScreen ='editor' : focusedImage = null">✖</button>
           </div>
           <div
+
             class="absolute bottom-0 left-0 right-0 p-2 gap-5 font-semibold drop-shadow shadow-white bg-white bg-opacity-50 text-sm flex justify-between items-center h-8  ">
+
             <span><span class="font-semibold"></span> <span
             x-text="focusedImage ? new Date(focusedImage.meta.created).toLocaleString(): ''"></span></span>
-            
-           
+
+
         <span><span class="font-semibold"></span> <span
             x-text="focusedImage?.meta.width + 'x' + focusedImage?.meta.height + 'px'"></span></span>
             <span><span class="font-semibold"></span><span class="drop-shadow-md"
-            x-text="focusedImage?.fileName"></span></span>  
+            x-text="focusedImage?.fileName"></span></span>
           </div>
         </div>
         <div @click.stop="nextImage()"
@@ -62,24 +67,25 @@
           ›</div>
       </div>
 
-    
+
       <div
         x-show="!viewerMode"
         class="relative custom-scroll overflow-hidden scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-400 scrollbar-track-gray-800">
 
-        <div class="overflow-auto py-2 px-2 w-full">
-          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-2">
+        <div class="overflow-y-auto py-2 px-2 w-full">
+          <div class="flex justify-items-start flex-row flex-wrap gap-1">
 
             <template x-for="(img, idx) in (await paginate()) || []" :key="idx">
-              <div class="w-full">
-                <img @contextmenu.prevent="selectImage(img)" @click="focusImage(img)" :src="img.url"
-                  class="object-cover w-full h-full cursor-pointer"
+              <div style="width: 256px; height: 256px;" class="border-2 border-gray-800 bg-gray-500">
+                <img @contextmenu.prevent="selectImage(img)" @click="img.onclick ?? focusImage(img)" :src="img.url"
+                  class="object-contain  cursor-pointer"
+                  style="width: 256px; height: 256px;"
                   :class="{ 'border-4 border-blue-500': multiSelectedImages.includes(img), 'border-4 border-white': focusedImage === img }"
                   alt="image.meta.fileName" />
               </div>
             </template>
 
-           
+
           </div>
         </div>
       </div>
