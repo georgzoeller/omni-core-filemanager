@@ -26,10 +26,25 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         multiSelectedImages: [],
         hasImages: false,
         cursor: null,
+        loading: false, // for anims
+        scale : 1, // zoom
+        x: 0, //pan
+        y: 0,
+        focusedImage: focusedImage || null,
+        hover: false,
 
         async init() {
 
             await this.fetchImages()
+
+            //@ts-expect-error
+            window.parent.client.subscribeToServiceEvent("chat","chat_message_added",(message) => {
+                console.log("chat_message_added", message);
+                // If we have an image, map it to the globe
+                if (message.attachments && message.images?.length > 0) {
+                    this.images.unshift(message.images)
+                }
+            })
 
         },
 
@@ -101,12 +116,27 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
             if (currentIndex < this.images.length - 1) {
                 await this.focusImage(this.images[currentIndex + 1]);
             }
+
         },
+
+        animateTransition()
+        {
+            if (this.loading)
+            {
+                return
+            }
+            this.loading = true;
+            setTimeout(() => {
+              this.loading = false;
+            }, 200); // Adjust this delay as needed
+        },
+
         async previousImage() {
             const currentIndex = this.images.indexOf(this.focusedImage);
             if (currentIndex > 0) {
                 await this.focusImage(this.images[currentIndex - 1]);
             }
+
         },
 
 
@@ -115,16 +145,19 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
                 this.currentPage += 1;
             }
         },
-        hover: false,
+
         mouseEnter() {
             this.hover = true;
         },
         mouseLeave() {
             this.hover = false;
         },
-        focusedImage: focusedImage || null,
-        async focusImage(img) {
 
+        async focusImage(img) {
+            this.animateTransition()
+            this.x = 0
+            this.y = 0
+            this.scale = 1
             if (img.onclick != null) {
                 await img.onclick.call(img)
                 return
@@ -138,6 +171,14 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
                 this.currentPage -= 1;
             }
         },
+
+        async sendToChat(img)
+        {
+            //@ts-expect-error
+            window.parent.client.sendSystemMessage(`**${img.fileName}**:  \n ${img.meta?.width}x${img.meta.height} ${img.meta?.type }` , 'text/markdown', {images: [{...img}], commands: [
+            {'id': 'run', title: '🞂 Run', args:[null, {...img} ] }]},['no-picture'])
+
+        },
         zoomImage(event) {
             // Determine whether the wheel was scrolled up or down
             const direction = event.deltaY < 0 ? 0.1 : -0.1;
@@ -148,6 +189,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
             // Calculate the new scale
             const newScale = Math.max(1, currentScaleValue + direction);
+            this.scale = newScale
 
             // Set the new scale
             this.$refs.zoomImg.style.transform = `scale(${newScale})`;
@@ -210,14 +252,31 @@ document.addEventListener('alpine:init', async () =>
             } catch (err) {
                 console.error(err.name, err.message);
             }
-        }
-
+        },
+        moving: false,
+        startMoving(e) {
+          this.moving = true;
+          this.lastX = e.clientX;
+          this.lastY = e.clientY;
+          e.preventDefault();
+        },
+        move(e) {
+          if (!this.moving) return;
+          this.x += e.clientX - this.lastX;
+          this.y += e.clientY - this.lastY;
+          this.lastX = e.clientX;
+          this.lastY = e.clientY;
+        },
+        stopMoving() {
+          this.moving = false;
+        },
 
     })))
 
 
 Alpine.start()
 
-    ;  // expose class to global scope so Alpine.js can access it
+
+
 
 export default {}
