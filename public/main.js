@@ -3019,12 +3019,16 @@ var createGallery = function(imagesPerPage, imageApi) {
     hover: false,
     async init() {
       await this.fetchImages();
-      window.parent.client.subscribeToServiceEvent("chat", "chat_message_added", (message) => {
-        console.log("chat_message_added", message);
-        if (message.attachments && message.images?.length > 0) {
-          this.images.unshift(message.images);
-        }
-      });
+      let self = this;
+    },
+    getDisplayUrl(file) {
+      if (!file) {
+        return "/404.png";
+      } else if (file?.mimeType?.startsWith("audio/") || file.mimeType == "application/ogg") {
+        return "/audio.png";
+      } else {
+        return file.url;
+      }
     },
     async fetchImages(opts) {
       if (this.viewerMode) {
@@ -3048,6 +3052,12 @@ var createGallery = function(imagesPerPage, imageApi) {
       let lastCursor = this.cursor;
       if (data2.images) {
         this.images = this.images.filter((item) => item.onclick == null);
+        data2.images = data2.images.map((f) => {
+          if (f.mimeType.startsWith("audio/") || f.mimeType == "application/ogg") {
+            f.isAudio = true;
+          }
+          return f;
+        });
         if (this.hasImages += null) {
           this.images = this.images.concat(data2.images);
         } else {
@@ -3161,8 +3171,10 @@ var createGallery = function(imagesPerPage, imageApi) {
       );
       let data2 = await result.json();
       if (!data2.ok) {
-        window.parent.client.sendSystemMessage("Failed to delete image(s) " + data2.error, "text/plain", {}, ["error"]);
+        window.parent.client.sendSystemMessage("Failed to delete image(s) " + data2.reason, "text/plain", {}, ["error"]);
+        return;
       }
+      this.multiSelectedImages = [];
       if (data2.deleted) {
         this.images = this.images.filter((img2) => {
           console.log(img2);

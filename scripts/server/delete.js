@@ -19,6 +19,16 @@ const script = {
       return {ok: false, reason: 'Not an array'};
     }
 
+    payload.delete = payload.delete.map((fid) => {
+      if (typeof(fid) === 'string'){
+        return fid
+      }
+      if (typeof(fid) === 'object' && fid.ticket != null && fid.ticket.fid != null){
+        return fid.ticket.fid
+      }
+      return null
+    }).filter((fid) => fid != null)
+
 
 
     await Promise.all(payload.delete.map(fid=> {

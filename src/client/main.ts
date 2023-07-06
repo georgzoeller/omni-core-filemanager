@@ -1,3 +1,6 @@
+
+
+
 import Alpine from 'alpinejs'
 
 declare global {
@@ -37,15 +40,24 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
             await this.fetchImages()
 
-            //@ts-expect-error
-            window.parent.client.subscribeToServiceEvent("chat","chat_message_added",(message) => {
-                console.log("chat_message_added", message);
-                // If we have an image, map it to the globe
-                if (message.attachments && message.images?.length > 0) {
-                    this.images.unshift(message.images)
-                }
-            })
+            let self = this
 
+        },
+
+        getDisplayUrl(file)
+        {
+            if (!file)
+            {
+                return '/404.png'
+            }
+            else if (file?.mimeType?.startsWith('audio/') || file.mimeType == 'application/ogg')
+            {
+                return '/audio.png'
+            }
+            else
+            {
+                return file.url
+            }
         },
 
         async fetchImages(opts?: { cursor?: string }) {
@@ -70,6 +82,15 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
             let lastCursor = this.cursor
             if (data.images) {
                 this.images = this.images.filter(item => item.onclick == null)
+
+                data.images = data.images.map(f => {
+                    if (f.mimeType.startsWith('audio/') || f.mimeType == 'application/ogg' ) {
+                        f.isAudio = true
+                    }
+                    return f
+                })
+
+
                 if (this.hasImages! += null) {
                     this.images = this.images.concat(data.images)
                 }
@@ -213,10 +234,13 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
             if (!data.ok) {
                 //@ts-expect-error
-                window.parent.client.sendSystemMessage('Failed to delete image(s) ' + data.error, 'text/plain', {}, ['error'])
+                window.parent.client.sendSystemMessage('Failed to delete image(s) ' + data.reason, 'text/plain', {}, ['error'])
+                return
             }
 
+            this.multiSelectedImages = []
             if (data.deleted) {
+
                 this.images = this.images.filter(img => {
                     console.log(img)
                     if (img.onclick != null) return true
