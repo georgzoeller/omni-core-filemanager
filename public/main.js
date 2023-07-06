@@ -3044,9 +3044,13 @@ var createGallery = function(imagesPerPage, imageApi) {
         this.hasImages = true;
         let self = this;
         if (lastCursor != this.cursor) {
-          this.images.push({ onclick: async () => {
-            await self.fetchImages({ cursor: self.cursor });
-          }, url: "/more.png", meta: {} });
+          this.images.push({
+            onclick: async () => {
+              await self.fetchImages({ cursor: self.cursor });
+            },
+            url: "/more.png",
+            meta: {}
+          });
         }
       }
       this.totalPages = Math.ceil(this.images.length / this.imagesPerPage);
@@ -3062,16 +3066,16 @@ var createGallery = function(imagesPerPage, imageApi) {
     paginate() {
       return this.images;
     },
-    nextImage() {
+    async nextImage() {
       const currentIndex = this.images.indexOf(this.focusedImage);
       if (currentIndex < this.images.length - 1) {
-        this.focusedImage = this.images[currentIndex + 1];
+        await this.focusImage(this.images[currentIndex + 1]);
       }
     },
-    previousImage() {
+    async previousImage() {
       const currentIndex = this.images.indexOf(this.focusedImage);
       if (currentIndex > 0) {
-        this.focusedImage = this.images[currentIndex - 1];
+        await this.focusImage(this.images[currentIndex - 1]);
       }
     },
     nextPage() {
@@ -3087,7 +3091,11 @@ var createGallery = function(imagesPerPage, imageApi) {
       this.hover = false;
     },
     focusedImage: focusedImage || null,
-    focusImage(img) {
+    async focusImage(img) {
+      if (img.onclick != null) {
+        await img.onclick.call(img);
+        return;
+      }
       this.focusedImage = img;
       console.log("focusImage", img);
     },
@@ -3095,6 +3103,13 @@ var createGallery = function(imagesPerPage, imageApi) {
       if (this.currentPage > 1) {
         this.currentPage -= 1;
       }
+    },
+    zoomImage(event) {
+      const direction = event.deltaY < 0 ? 0.1 : -0.1;
+      const currentScale = this.$refs.zoomImg.style.transform || "scale(1)";
+      const currentScaleValue = parseFloat(currentScale.slice(6, -1));
+      const newScale = Math.max(1, currentScaleValue + direction);
+      this.$refs.zoomImg.style.transform = `scale(${newScale})`;
     },
     async deleteByFid(img) {
       console.log("delete", img);

@@ -1,9 +1,9 @@
 import Alpine from 'alpinejs'
 
 declare global {
-  interface Window {
-    Alpine: typeof Alpine;
-  }
+    interface Window {
+        Alpine: typeof Alpine;
+    }
 }
 
 const args = new URLSearchParams(location.search)
@@ -13,8 +13,7 @@ focusedImage = params?.focusedImage
 let viewerMode = focusedImage ? true : false
 
 
-const  createGallery = function  (imagesPerPage: number, imageApi: string)
-{
+const createGallery = function (imagesPerPage: number, imageApi: string) {
 
 
     return {
@@ -22,28 +21,25 @@ const  createGallery = function  (imagesPerPage: number, imageApi: string)
         currentPage: 1,
         imagesPerPage: imagesPerPage,
         imageApi: imageApi,
-        images: viewerMode ? [] :  Array(imagesPerPage+1).fill({ url: '/ph_250.png', meta: {}}),
+        images: viewerMode ? [] : Array(imagesPerPage + 1).fill({ url: '/ph_250.png', meta: {} }),
         totalPages: () => Math.ceil(this.images.length / this.imagesPerPage),
         multiSelectedImages: [],
         hasImages: false,
         cursor: null,
 
-        async init()
-        {
+        async init() {
 
-                await this.fetchImages()
+            await this.fetchImages()
 
         },
 
-        async fetchImages(opts?:{cursor?:string}) {
-            if (this.viewerMode)
-            {
+        async fetchImages(opts?: { cursor?: string }) {
+            if (this.viewerMode) {
                 return Promise.resolve()
             }
 
-            const body: {limit:number, cursor?: string} = { limit: this.imagesPerPage }
-            if (opts?.cursor)
-            {
+            const body: { limit: number, cursor?: string } = { limit: this.imagesPerPage }
+            if (opts?.cursor) {
                 body.cursor = opts?.cursor
             }
             const response = await fetch('/api/v1/mercenaries/runscript/omni-core-filemanager:files',
@@ -56,31 +52,29 @@ const  createGallery = function  (imagesPerPage: number, imageApi: string)
                 }
             );
             const data = await response.json();
-            let lastCursor =  this.cursor
-            if (data.images)
-            {
-                this.images = this.images.filter(item=>item.onclick==null)
-                if (this.hasImages !+= null)
-                {
+            let lastCursor = this.cursor
+            if (data.images) {
+                this.images = this.images.filter(item => item.onclick == null)
+                if (this.hasImages! += null) {
                     this.images = this.images.concat(data.images)
                 }
-                else
-                {
+                else {
                     this.images = data.images;
                 }
 
-                this.cursor = this.images[this.images.length-1].seq
+                this.cursor = this.images[this.images.length - 1].seq
 
             }
-            if (data.images.length)
-            {
+            if (data.images.length) {
                 this.hasImages = true
                 let self = this
-                if (lastCursor != this.cursor)
-                {
-                    this.images.push({ onclick: async ()=>{
-                        await self.fetchImages({cursor:self.cursor})},    url: '/more.png', meta: {}})
-                    }
+                if (lastCursor != this.cursor) {
+                    this.images.push({
+                        onclick: async () => {
+                            await self.fetchImages({ cursor: self.cursor })
+                        }, url: '/more.png', meta: {}
+                    })
+                }
             }
 
             this.totalPages = Math.ceil(this.images.length / this.imagesPerPage);
@@ -102,21 +96,22 @@ const  createGallery = function  (imagesPerPage: number, imageApi: string)
             return this.images
         },
 
-        nextImage() {
+        async nextImage() {
             const currentIndex = this.images.indexOf(this.focusedImage);
             if (currentIndex < this.images.length - 1) {
-                this.focusedImage = this.images[currentIndex + 1];
+                await this.focusImage(this.images[currentIndex + 1]);
             }
         },
-        previousImage() {
+        async previousImage() {
             const currentIndex = this.images.indexOf(this.focusedImage);
             if (currentIndex > 0) {
-                this.focusedImage = this.images[currentIndex - 1];
+                await this.focusImage(this.images[currentIndex - 1]);
             }
         },
 
+
         nextPage() {
-            if(this.currentPage < this.totalPages) {
+            if (this.currentPage < this.totalPages) {
                 this.currentPage += 1;
             }
         },
@@ -128,21 +123,38 @@ const  createGallery = function  (imagesPerPage: number, imageApi: string)
             this.hover = false;
         },
         focusedImage: focusedImage || null,
-        focusImage(img) {
+        async focusImage(img) {
+
+            if (img.onclick != null) {
+                await img.onclick.call(img)
+                return
+            }
             this.focusedImage = img;
             console.log('focusImage', img)
         },
 
         previousPage() {
-            if(this.currentPage > 1) {
+            if (this.currentPage > 1) {
                 this.currentPage -= 1;
             }
         },
+        zoomImage(event) {
+            // Determine whether the wheel was scrolled up or down
+            const direction = event.deltaY < 0 ? 0.1 : -0.1;
 
+            // Get the current scale of the image
+            const currentScale = this.$refs.zoomImg.style.transform || 'scale(1)';
+            const currentScaleValue = parseFloat(currentScale.slice(6, -1));
+
+            // Calculate the new scale
+            const newScale = Math.max(1, currentScaleValue + direction);
+
+            // Set the new scale
+            this.$refs.zoomImg.style.transform = `scale(${newScale})`;
+        },
         async deleteByFid(img) {
             console.log('delete', img)
-            if (!Array.isArray(img))
-            {
+            if (!Array.isArray(img)) {
                 img = [img]
             }
 
@@ -152,30 +164,26 @@ const  createGallery = function  (imagesPerPage: number, imageApi: string)
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({delete:img})
+                    body: JSON.stringify({ delete: img })
                 }
             );
             let data = await result.json();
 
-            if (!data.ok)
-            {
+            if (!data.ok) {
                 //@ts-expect-error
                 window.parent.client.sendSystemMessage('Failed to delete image(s) ' + data.error, 'text/plain', {}, ['error'])
             }
 
-            if (data.deleted)
-            {
-                this.images = this.images.filter(img=>{
+            if (data.deleted) {
+                this.images = this.images.filter(img => {
                     console.log(img)
                     if (img.onclick != null) return true
 
-                    let deleted =   data.deleted.includes(img.ticket.fid)
+                    let deleted = data.deleted.includes(img.ticket.fid)
                     return !deleted
                 })
-                if (this.focusedImage)
-                {
-                    if (data.deleted.includes(this.focusedImage.ticket.fid))
-                    {
+                if (this.focusedImage) {
+                    if (data.deleted.includes(this.focusedImage.ticket.fid)) {
                         this.focusedImage = null
                     }
                 }
@@ -190,26 +198,26 @@ const  createGallery = function  (imagesPerPage: number, imageApi: string)
 
 window.Alpine = Alpine
 document.addEventListener('alpine:init', async () =>
-Alpine.data('appState', () => ({
-    createGallery,
-    async copyToClipboard(imgUrl) {
-        try {
-          const res = await fetch(imgUrl);
-          const blob = await res.blob();
-          const data = [new ClipboardItem({ [blob.type]: blob })];
-          await navigator.clipboard.write(data);
-          alert('Image copied to clipboard');
-        } catch (err) {
-          console.error(err.name, err.message);
+    Alpine.data('appState', () => ({
+        createGallery,
+        async copyToClipboard(imgUrl) {
+            try {
+                const res = await fetch(imgUrl);
+                const blob = await res.blob();
+                const data = [new ClipboardItem({ [blob.type]: blob })];
+                await navigator.clipboard.write(data);
+                alert('Image copied to clipboard');
+            } catch (err) {
+                console.error(err.name, err.message);
+            }
         }
-      }
 
 
-})))
+    })))
 
 
 Alpine.start()
 
-;  // expose class to global scope so Alpine.js can access it
+    ;  // expose class to global scope so Alpine.js can access it
 
 export default {}

@@ -33,12 +33,13 @@
       <div @click.stop="previousImage()" x-show="!viewerMode"
         class="w-8 h-full absolute top-0 left-0 flex items-center justify-center text-white text-4xl cursor-pointer">‹</div>
 
-      <div class="relative flex items-center justify-center bg-black bg-opacity-50" style="max-width: 90vw; max-height: 90vh;"
+        <div class="relative flex items-center justify-center bg-black bg-opacity-50" style="width: 90vw; height: 90vh; overflow: hidden;"
         @click.stop @contextmenu.prevent
         @mouseenter="showInfo = true"
         @mouseleave="showInfo = false">
 
-        <img :src="focusedImage?.url" class="object-contain " style="max-width: 90vw; max-height: 90vh; ;" />
+        <img :src="focusedImage?.url" class="object-contain " style="max-width: 90vw; max-height: 90vh; cursor:all-scroll;"
+          @wheel.prevent="zoomImage" x-ref="zoomImg"/>
 
         <div x-show="showInfo" class="absolute top-0 left-0 right-0 p-2 text-sm flex justify-between items-center gap-5 bg-black bg-opacity-50 h-8 text-white drop-shadow-md shadow-black">
 
@@ -81,9 +82,9 @@
 
             <template x-for="(img, idx) in (await paginate()) || []" :key="idx">
               <div style="width: 256px; height: 256px;" class="border-2 border-gray-800 bg-gray-500">
-                <img @contextmenu.prevent="selectImage(img)" @click="img.onclick ?? focusImage(img)" :src="img.url"
-                  class="object-contain  cursor-pointer"
-                  style="width: 256px; height: 256px;"
+                <img @contextmenu.prevent="selectImage(img)" @click="await focusImage(img)" :src="img.url"
+                  class="object-contain"
+                  style="width: 256px; height: 256px; cursor: zoom-in"
                   :class="{ 'border-4 border-blue-500': multiSelectedImages.includes(img), 'border-4 border-white': focusedImage === img }"
                   alt="image.meta.fileName" />
               </div>
