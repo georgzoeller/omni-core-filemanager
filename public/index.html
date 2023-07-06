@@ -19,7 +19,7 @@
   <div class="m-h-screen" x-data="appState">
     <div x-data="createGallery(25, '')" @keydown.escape.window="viewerMode ? window.parent.client.workbench.activeScreen ='editor' : focusedImage = null">
 
-      <div class="flex justify-between items-center mb-4 w-1/3 h-8">
+      <div  x-show="!viewerMode" class="flex justify-between items-center mb-4 w-1/3 h-8">
         <button @click="window.parent.client.workbench.activeScreen ='editor'"
           class="text-sm px-4 py-2 bg-slate-900 text-white rounded disabled:bg-gray-500">Back</button>
       </div>
@@ -45,7 +45,7 @@
               @click.stop="viewerMode ? window.parent.client.workbench.activeScreen ='editor' : focusedImage = null">✖</button>
           </div>
           <div
-            class="absolute bottom-0 left-0 right-0 p-2 gap-5 bg-white bg-opacity-40 text-sm flex justify-between items-center h-8  ">
+            class="absolute bottom-0 left-0 right-0 p-2 gap-5 font-semibold drop-shadow shadow-white bg-white bg-opacity-50 text-sm flex justify-between items-center h-8  ">
             <span><span class="font-semibold"></span> <span
             x-text="focusedImage ? new Date(focusedImage.meta.created).toLocaleString(): ''"></span></span>
             
@@ -64,6 +64,7 @@
 
     
       <div
+        x-show="!viewerMode"
         class="relative custom-scroll overflow-hidden scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-400 scrollbar-track-gray-800">
 
         <div class="overflow-auto py-2 px-2 w-full">
