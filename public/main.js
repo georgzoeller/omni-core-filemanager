@@ -2997,6 +2997,23 @@ var params = JSON.parse(args.get("q"));
 var focusedImage = null;
 focusedImage = params?.focusedImage;
 var viewerMode = focusedImage ? true : false;
+var copyToClipboardComponent = () => {
+  return {
+    copyText: "",
+    copyNotification: false,
+    async copyToClipboard(img) {
+      const res = await fetch(img.url);
+      const blob = await res.blob();
+      const data2 = [new ClipboardItem({ [blob.type]: blob })];
+      await navigator.clipboard.write(data2);
+      this.copyNotification = true;
+      let that = this;
+      setTimeout(function() {
+        that.copyNotification = false;
+      }, 3e3);
+    }
+  };
+};
 var createGallery = function(imagesPerPage, imageApi) {
   return {
     viewerMode,
@@ -3008,6 +3025,7 @@ var createGallery = function(imagesPerPage, imageApi) {
     multiSelectedImages: [],
     hasImages: false,
     cursor: null,
+    showInfo: false,
     loading: false,
     // for anims
     scale: 1,
@@ -3081,6 +3099,9 @@ var createGallery = function(imagesPerPage, imageApi) {
       this.totalPages = Math.ceil(this.images.length / this.imagesPerPage);
     },
     selectImage(img) {
+      if (img.onclick) {
+        return;
+      }
       const idx = this.multiSelectedImages.indexOf(img);
       if (idx > -1) {
         this.multiSelectedImages.splice(idx, 1);
@@ -3141,10 +3162,22 @@ var createGallery = function(imagesPerPage, imageApi) {
       }
     },
     async sendToChat(img) {
-      window.parent.client.sendSystemMessage(`**${img.fileName}**:  
- ${img.meta?.width}x${img.meta.height} ${img.meta?.type}`, "text/markdown", { images: [{ ...img }], commands: [
-        { "id": "run", title: "\u{1F782} Run", args: [null, { ...img }] }
-      ] }, ["no-picture"]);
+      if (Array.isArray(img)) {
+        window.parent.client.sendSystemMessage(``, "text/markdown", {
+          images: img,
+          commands: [
+            { "id": "run", title: "\u{1F782} Run", args: [null, img] }
+          ]
+        }, ["no-picture"]);
+        this.multiSelectedImages = [];
+      } else {
+        window.parent.client.sendSystemMessage(``, "text/markdown", {
+          images: [{ ...img }],
+          commands: [
+            { "id": "run", title: "\u{1F782} Run", args: [null, { ...img }] }
+          ]
+        }, ["no-picture"]);
+      }
     },
     zoomImage(event) {
       const direction = event.deltaY < 0 ? 0.1 : -0.1;
@@ -3193,38 +3226,44 @@ var createGallery = function(imagesPerPage, imageApi) {
   };
 };
 window.Alpine = module_default;
-document.addEventListener("alpine:init", async () => module_default.data("appState", () => ({
-  createGallery,
-  async copyToClipboard(imgUrl) {
-    try {
-      const res = await fetch(imgUrl);
-      const blob = await res.blob();
-      const data2 = [new ClipboardItem({ [blob.type]: blob })];
-      await navigator.clipboard.write(data2);
-      alert("Image copied to clipboard");
-    } catch (err) {
-      console.error(err.name, err.message);
-    }
-  },
-  moving: false,
-  startMoving(e) {
-    this.moving = true;
-    this.lastX = e.clientX;
-    this.lastY = e.clientY;
-    e.preventDefault();
-  },
-  move(e) {
-    if (!this.moving)
-      return;
-    this.x += e.clientX - this.lastX;
-    this.y += e.clientY - this.lastY;
-    this.lastX = e.clientX;
-    this.lastY = e.clientY;
-  },
-  stopMoving() {
-    this.moving = false;
+document.addEventListener(
+  "alpine:init",
+  async () => {
+    module_default.data("appState", () => ({
+      copyToClipboardComponent,
+      createGallery,
+      async copyToClipboard(imgUrl) {
+        try {
+          const res = await fetch(imgUrl);
+          const blob = await res.blob();
+          const data2 = [new ClipboardItem({ [blob.type]: blob })];
+          await navigator.clipboard.write(data2);
+          alert("Image copied to clipboard");
+        } catch (err) {
+          console.error(err.name, err.message);
+        }
+      },
+      moving: false,
+      startMoving(e) {
+        this.moving = true;
+        this.lastX = e.clientX;
+        this.lastY = e.clientY;
+        e.preventDefault();
+      },
+      move(e) {
+        if (!this.moving)
+          return;
+        this.x += e.clientX - this.lastX;
+        this.y += e.clientY - this.lastY;
+        this.lastX = e.clientX;
+        this.lastY = e.clientY;
+      },
+      stopMoving() {
+        this.moving = false;
+      }
+    }));
   }
-})));
+);
 module_default.start();
 var main_default = {};
 export {

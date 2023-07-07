@@ -9,6 +9,7 @@ declare global {
     }
 }
 
+// -------------------- Viewer Mode: If q.focusedImage is set, we hide the gallery and show the image full screen -----------------------
 const args = new URLSearchParams(location.search)
 const params = JSON.parse(args.get('q'))
 let focusedImage = null
@@ -16,8 +17,31 @@ focusedImage = params?.focusedImage
 let viewerMode = focusedImage ? true : false
 
 
-const createGallery = function (imagesPerPage: number, imageApi: string) {
+const copyToClipboardComponent = () =>
+{
+    return {
+    copyText: '',
+    copyNotification: false,
 
+  async copyToClipboard(img) {
+    const res = await fetch(img.url);
+    const blob = await res.blob();
+    const data = [new ClipboardItem({ [blob.type]: blob })];
+    await navigator.clipboard.write(data);
+    //alert('Image copied to clipboard');
+    //navigator.clipboard.writeText(this.copyText);
+    this.copyNotification = true;
+    let that = this;
+    setTimeout(function(){
+        that.copyNotification = false;
+    }, 3000);
+  }
+}
+}
+
+
+
+const createGallery = function (imagesPerPage: number, imageApi: string) {
 
     return {
         viewerMode: viewerMode,
@@ -29,8 +53,9 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         multiSelectedImages: [],
         hasImages: false,
         cursor: null,
+        showInfo: false,
         loading: false, // for anims
-        scale : 1, // zoom
+        scale: 1, // zoom
         x: 0, //pan
         y: 0,
         focusedImage: focusedImage || null,
@@ -44,18 +69,14 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
         },
 
-        getDisplayUrl(file)
-        {
-            if (!file)
-            {
+        getDisplayUrl(file) {
+            if (!file) {
                 return '/404.png'
             }
-            else if (file?.mimeType?.startsWith('audio/') || file.mimeType == 'application/ogg')
-            {
+            else if (file?.mimeType?.startsWith('audio/') || file.mimeType == 'application/ogg') {
                 return '/audio.png'
             }
-            else
-            {
+            else {
                 return file.url
             }
         },
@@ -84,7 +105,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
                 this.images = this.images.filter(item => item.onclick == null)
 
                 data.images = data.images.map(f => {
-                    if (f.mimeType.startsWith('audio/') || f.mimeType == 'application/ogg' ) {
+                    if (f.mimeType.startsWith('audio/') || f.mimeType == 'application/ogg') {
                         f.isAudio = true
                     }
                     return f
@@ -116,8 +137,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
             this.totalPages = Math.ceil(this.images.length / this.imagesPerPage);
         },
         selectImage(img) {
-            if (img.onclick)
-            {
+            if (img.onclick) {
                 return
             }
             const idx = this.multiSelectedImages.indexOf(img);
@@ -144,15 +164,13 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
         },
 
-        animateTransition()
-        {
-            if (this.loading)
-            {
+        animateTransition() {
+            if (this.loading) {
                 return
             }
             this.loading = true;
             setTimeout(() => {
-              this.loading = false;
+                this.loading = false;
             }, 200); // Adjust this delay as needed
         },
 
@@ -197,11 +215,24 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
             }
         },
 
-        async sendToChat(img)
-        {
-            //@ts-expect-error
-            window.parent.client.sendSystemMessage(`**${img.fileName}**:  \n ${img.meta?.width}x${img.meta.height} ${img.meta?.type }` , 'text/markdown', {images: [{...img}], commands: [
-            {'id': 'run', title: '🞂 Run', args:[null, {...img} ] }]},['no-picture'])
+        async sendToChat(img) {
+
+            if (Array.isArray(img)) {
+                //@ts-expect-error
+                window.parent.client.sendSystemMessage(``, 'text/markdown', {
+                    images: img, commands: [
+                        { 'id': 'run', title: '🞂 Run', args: [null, img ]}]
+                }, ['no-picture'])
+                this.multiSelectedImages = []
+            }
+            else
+            {
+                //@ts-expect-error
+                window.parent.client.sendSystemMessage(``, 'text/markdown', {
+                    images: [{ ...img }], commands: [
+                        { 'id': 'run', title: '🞂 Run', args: [null, { ...img }] }]
+                }, ['no-picture'])
+            }
 
         },
         zoomImage(event) {
@@ -266,9 +297,13 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
 
 
+
+
 window.Alpine = Alpine
 document.addEventListener('alpine:init', async () =>
+{
     Alpine.data('appState', () => ({
+        copyToClipboardComponent,
         createGallery,
         async copyToClipboard(imgUrl) {
             try {
@@ -283,23 +318,31 @@ document.addEventListener('alpine:init', async () =>
         },
         moving: false,
         startMoving(e) {
-          this.moving = true;
-          this.lastX = e.clientX;
-          this.lastY = e.clientY;
-          e.preventDefault();
+            this.moving = true;
+            this.lastX = e.clientX;
+            this.lastY = e.clientY;
+            e.preventDefault();
         },
         move(e) {
-          if (!this.moving) return;
-          this.x += e.clientX - this.lastX;
-          this.y += e.clientY - this.lastY;
-          this.lastX = e.clientX;
-          this.lastY = e.clientY;
+            if (!this.moving) return;
+            this.x += e.clientX - this.lastX;
+            this.y += e.clientY - this.lastY;
+            this.lastX = e.clientX;
+            this.lastY = e.clientY;
         },
         stopMoving() {
-          this.moving = false;
+            this.moving = false;
         },
 
-    })))
+
+    }
+
+    ))
+
+}
+)
+
+
 
 
 Alpine.start()
