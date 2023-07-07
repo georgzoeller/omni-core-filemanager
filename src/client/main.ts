@@ -244,7 +244,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
             const currentScaleValue = parseFloat(currentScale.slice(6, -1));
 
             // Calculate the new scale
-            const newScale = Math.max(1, currentScaleValue + direction);
+            const newScale = Math.min(Math.max(0.75, currentScaleValue + direction),5.0);
             this.scale = newScale
 
             // Set the new scale

@@ -3183,7 +3183,7 @@ var createGallery = function(imagesPerPage, imageApi) {
       const direction = event.deltaY < 0 ? 0.1 : -0.1;
       const currentScale = this.$refs.zoomImg.style.transform || "scale(1)";
       const currentScaleValue = parseFloat(currentScale.slice(6, -1));
-      const newScale = Math.max(1, currentScaleValue + direction);
+      const newScale = Math.min(Math.max(0.75, currentScaleValue + direction), 5);
       this.scale = newScale;
       this.$refs.zoomImg.style.transform = `scale(${newScale})`;
     },
