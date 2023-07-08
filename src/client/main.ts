@@ -69,7 +69,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
         },
 
-        getDisplayUrl(file) {
+        getDisplayUrl(file, opts) {
             if (!file) {
                 return '/404.png'
             }
@@ -77,6 +77,19 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
                 return '/audio.png'
             }
             else {
+
+                if (opts && (opts.width || opts.height)) {
+                    let url = file.url
+                    // add all provided opts into query string using UrlSearchParams
+                    const params = new URLSearchParams()
+
+                    if (opts.height)  params.set('height', opts.height)
+                    if (opts.width)  params.set('width', opts.width)
+                    if (opts.fit)  params.set('fit', opts.fit)
+                    url += '?' + params.toString()
+                    return url
+                }
+
                 return file.url
             }
         },

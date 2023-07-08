@@ -34,7 +34,8 @@
       }
 
       .custom-scroll {
-        max-height: calc(100vh - 6.5rem);
+        max-height: calc(100vh - 7rem);
+        padding-top: -5px;
         overflow-y: auto;
 
       }
@@ -86,7 +87,7 @@
                       <img
                       @mouseenter="hoverItem = img"
                       @mouseleave="hoverItem = null"
-                      @contextmenu.prevent="selectImage(img)" @click="await focusImage(img)" :src="getDisplayUrl(img)" class="object-cover rounded-sm object-top" style="width: 256px; height: 256px; cursor: zoom-in" :class="{ 'border-4 border-blue-500': multiSelectedImages.includes(img), 'border-4 border-white': focusedImage === img }" alt="image.meta.fileName" />
+                      @contextmenu.prevent="selectImage(img)" @click="await focusImage(img)" :src="getDisplayUrl(img, {width: 256, height: 256, fit: 'contain'})" class="object-cover rounded-sm object-top" style="width: 256px; height: 256px; cursor: zoom-in" :class="{ 'border-4 border-blue-500': multiSelectedImages.includes(img), 'border-4 border-white': focusedImage === img }" alt="image.meta.fileName" />
                     </div>
                   </template>
                 </div>

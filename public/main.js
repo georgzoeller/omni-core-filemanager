@@ -3039,12 +3039,24 @@ var createGallery = function(imagesPerPage, imageApi) {
       await this.fetchImages();
       let self = this;
     },
-    getDisplayUrl(file) {
+    getDisplayUrl(file, opts) {
       if (!file) {
         return "/404.png";
       } else if (file?.mimeType?.startsWith("audio/") || file.mimeType == "application/ogg") {
         return "/audio.png";
       } else {
+        if (opts && (opts.width || opts.height)) {
+          let url = file.url;
+          const params2 = new URLSearchParams();
+          if (opts.height)
+            params2.set("height", opts.height);
+          if (opts.width)
+            params2.set("width", opts.width);
+          if (opts.fit)
+            params2.set("fit", opts.fit);
+          url += "?" + params2.toString();
+          return url;
+        }
         return file.url;
       }
     },
