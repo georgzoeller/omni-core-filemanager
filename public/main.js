@@ -3093,7 +3093,9 @@ var createGallery = function(imagesPerPage, imageApi) {
         } else {
           this.images = data2.images;
         }
-        this.cursor = this.images[this.images.length - 1].seq;
+        if (data2.images.length > 1) {
+          this.cursor = this.images[this.images.length - 1].seq;
+        }
       }
       if (data2.images.length) {
         this.hasImages = true;

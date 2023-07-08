@@ -131,8 +131,10 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
                 else {
                     this.images = data.images;
                 }
-
-                this.cursor = this.images[this.images.length - 1].seq
+                if (data.images.length>1)
+                {
+                    this.cursor = this.images[this.images.length - 1].seq
+                }
 
             }
             if (data.images.length) {
