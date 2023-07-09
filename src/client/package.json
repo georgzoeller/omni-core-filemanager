@@ -9,6 +9,7 @@
     "typescript": "^5.1.3"
   },
   "dependencies": {
-    "alpinejs": "^3.12.3"
+    "alpinejs": "^3.12.3",
+    "flip-js": "^0.0.4"
   }
 }

@@ -2997,6 +2997,34 @@ var params = JSON.parse(args.get("q"));
 var focusedImage = null;
 focusedImage = params?.focusedImage;
 var viewerMode = focusedImage ? true : false;
+var downloadImage = function(image) {
+  let fid = image.ticket.fid;
+  const filename = image.fileName;
+  fetch("/fid/" + fid + "?download=true").then((response) => response.blob()).then((blob) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }).catch((error2) => console.error(error2));
+};
+var runExtensionScript = async (scriptName, payload) => {
+  const response = await fetch(
+    "/api/v1/mercenaries/runscript/omni-core-filemanager:" + scriptName,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    }
+  );
+  const data2 = await response.json();
+  console.log(scriptName, data2);
+  return data2;
+};
 var copyToClipboardComponent = () => {
   return {
     copyText: "",
@@ -3023,7 +3051,6 @@ var createGallery = function(imagesPerPage, imageApi) {
     images: viewerMode ? [] : Array(imagesPerPage + 1).fill({ url: "/ph_250.png", meta: {} }),
     totalPages: () => Math.ceil(this.images.length / this.imagesPerPage),
     multiSelectedImages: [],
-    hasImages: false,
     cursor: null,
     showInfo: false,
     loading: false,
@@ -3036,15 +3063,74 @@ var createGallery = function(imagesPerPage, imageApi) {
     focusedImage: focusedImage || null,
     hover: false,
     async init() {
-      await this.fetchImages();
-      let self = this;
+      await this.fetchImages({ replace: true, limit: imagesPerPage });
+    },
+    async handleUpload(files) {
+      const uploaded = await this.uploadFiles(files);
+      await this.fetchImages({ replace: true, limit: imagesPerPage });
+    },
+    async runRecipeWith(runFiles) {
+      let files = module_default.raw([...runFiles].filter((f) => f?.mimeType.startsWith("image/") || f?.mimeType.startsWith("audio/") || f.mimeType == "application/ogg" || f.mimeType == "application/pdf" || f.mimeType == "application/x-pdf"));
+      let images = files.filter((f) => f?.mimeType.startsWith("image/"));
+      let audio = files.filter((f) => f?.mimeType.startsWith("audio/") || f.mimeType == "application/ogg");
+      let documents = files.filter((f) => f.mimeType == "application/pdf" || f.mimeType == "application/x-pdf");
+      let args2 = {
+        images,
+        audio,
+        documents
+      };
+      window.parent.client.runScript("run", args2);
+    },
+    async fileToDataUrl(file) {
+      return new Promise(function(resolve, reject) {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.readAsDataURL(file);
+      });
+    },
+    async uploadFiles(files) {
+      if (files?.length > 0) {
+        let result = await Promise.all(
+          Array.from(files).map(async (file) => {
+            const form = new FormData();
+            form.append("file", file, file.name || Date.now().toString());
+            this.imageUrl = await this.fileToDataUrl(file);
+            try {
+              const response = await fetch("/fid", {
+                method: "POST",
+                body: form
+              });
+              if (response.ok) {
+                const data2 = await response.json();
+                if (data2.length > 0 && data2[0].ticket && data2[0].ticket.fid) {
+                  return data2[0];
+                } else {
+                  console.warn("Failed to upload file", { data: data2, file });
+                  return null;
+                }
+              } else {
+                console.warn("Failed to upload file", { response, file });
+                return null;
+              }
+            } catch (error2) {
+              console.error("Failed to upload file", { error: error2, file });
+              return null;
+            }
+          })
+        );
+        result = result.filter((r) => r);
+        return result;
+      }
+      return [];
     },
     getDisplayUrl(file, opts) {
       if (!file) {
         return "/404.png";
       } else if (file?.mimeType?.startsWith("audio/") || file.mimeType == "application/ogg") {
         return "/audio.png";
-      } else {
+      } else if (file?.mimeType?.startsWith("application/json") || file.mimeType == "text/json") {
+        return "/json.png";
+      } else if (file?.mimeType?.startsWith("image/")) {
         if (opts && (opts.width || opts.height)) {
           let url = file.url;
           const params2 = new URLSearchParams();
@@ -3058,6 +3144,42 @@ var createGallery = function(imagesPerPage, imageApi) {
           return url;
         }
         return file.url;
+      } else if (file?.meta?.type === "recipe") {
+        return "/recipe.png";
+      } else {
+        console.log(module_default.raw(file));
+        return "/ph_250.png";
+      }
+    },
+    async addItems(images, replace = false) {
+      let lastCursor = this.cursor;
+      if (images && images.length) {
+        this.images = this.images.filter((item) => item.onclick == null);
+        images = images.map((f) => {
+          if (f.mimeType.startsWith("audio/") || f.mimeType == "application/ogg") {
+            f.isAudio = true;
+          }
+          return f;
+        });
+        this.cursor = images[images.length - 1].seq;
+        if (replace) {
+          this.images = images;
+        } else {
+          this.images = this.images.concat(images);
+        }
+        if (this.images.length) {
+          let self = this;
+          if (lastCursor != this.cursor || replace) {
+            this.images.push({
+              onclick: async () => {
+                await self.fetchImages({ cursor: self.cursor });
+              },
+              url: "/more.png",
+              meta: {}
+            });
+          }
+        }
+        this.totalPages = Math.ceil(this.images.length / this.imagesPerPage);
       }
     },
     async fetchImages(opts) {
@@ -3068,49 +3190,11 @@ var createGallery = function(imagesPerPage, imageApi) {
       if (opts?.cursor) {
         body.cursor = opts?.cursor;
       }
-      const response = await fetch(
-        "/api/v1/mercenaries/runscript/omni-core-filemanager:files",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(body)
-        }
-      );
-      const data2 = await response.json();
-      let lastCursor = this.cursor;
-      if (data2.images) {
-        this.images = this.images.filter((item) => item.onclick == null);
-        data2.images = data2.images.map((f) => {
-          if (f.mimeType.startsWith("audio/") || f.mimeType == "application/ogg") {
-            f.isAudio = true;
-          }
-          return f;
-        });
-        if (this.hasImages += null) {
-          this.images = this.images.concat(data2.images);
-        } else {
-          this.images = data2.images;
-        }
-        if (data2.images.length > 1) {
-          this.cursor = this.images[this.images.length - 1].seq;
-        }
+      if (opts?.limit && typeof opts.limit === "number" && opts.limit > 0) {
+        body.limit = Math.max(opts.limit, 2);
       }
-      if (data2.images.length) {
-        this.hasImages = true;
-        let self = this;
-        if (lastCursor != this.cursor) {
-          this.images.push({
-            onclick: async () => {
-              await self.fetchImages({ cursor: self.cursor });
-            },
-            url: "/more.png",
-            meta: {}
-          });
-        }
-      }
-      this.totalPages = Math.ceil(this.images.length / this.imagesPerPage);
+      const data2 = await runExtensionScript("files", body);
+      this.addItems(data2.images, opts?.replace);
     },
     selectImage(img) {
       if (img.onclick) {
@@ -3193,6 +3277,28 @@ var createGallery = function(imagesPerPage, imageApi) {
         }, ["no-picture"]);
       }
     },
+    async exportImage(img) {
+      const imageFid = img;
+      const action = "export";
+      let args2 = {};
+      const workflow = await window.parent.client.workbench.toJSON();
+      if (!workflow) {
+        alert("No active workflow");
+      }
+      const payload = { imageFid, action, args: args2, recipe: workflow };
+      const resultImage = (await runExtensionScript("export", payload)).image;
+      await downloadImage(resultImage);
+      await this.fetchImages({ replace: true, limit: imagesPerPage });
+    },
+    async importImage(img) {
+      let args2 = {
+        action: "import",
+        imageFid: img.ticket.fid
+      };
+      const file = (await runExtensionScript("export", args2)).file;
+      console.log("import", file);
+      window.parent.location.href = window.parent.location.protocol + "//" + window.parent.location.host + `/?rx=${encodeURIComponent(file.url)}`;
+    },
     zoomImage(event) {
       const direction = event.deltaY < 0 ? 0.1 : -0.1;
       const currentScale = this.$refs.zoomImg.style.transform || "scale(1)";
@@ -3206,17 +3312,12 @@ var createGallery = function(imagesPerPage, imageApi) {
       if (!Array.isArray(img)) {
         img = [img];
       }
-      let result = await fetch(
-        "/api/v1/mercenaries/runscript/omni-core-filemanager:delete",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ delete: img })
+      if (img.length > 1) {
+        if (!confirm(`Are you sure you want to delete ${img.length} items?`)) {
+          return;
         }
-      );
-      let data2 = await result.json();
+      }
+      let data2 = await runExtensionScript("delete", { delete: img });
       if (!data2.ok) {
         window.parent.client.sendSystemMessage("Failed to delete image(s) " + data2.reason, "text/plain", {}, ["error"]);
         return;
@@ -3233,8 +3334,12 @@ var createGallery = function(imagesPerPage, imageApi) {
         if (this.focusedImage) {
           if (data2.deleted.includes(this.focusedImage.ticket.fid)) {
             this.focusedImage = null;
+            if (this.viewerMode === true) {
+              window.parent.client.workbench.hideExtension();
+            }
           }
         }
+        await this.fetchImages({ cursor: this.cursor, limit: data2.deleted.length });
       }
     }
   };

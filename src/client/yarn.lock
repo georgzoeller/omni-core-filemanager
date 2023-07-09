@@ -261,12 +261,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"flip-js@npm:^0.0.4":
+  version: 0.0.4
+  resolution: "flip-js@npm:0.0.4"
+  checksum: ea6ed657796683b11484e878c477b768010f4457d5e22370d8d32d9d1b4e1833f98f3fd23f6d19ad93ade9397ef2f889353730944f7ba61a3fb00b305577b50c
+  languageName: node
+  linkType: hard
+
 "omni-extension-automatic1111@workspace:.":
   version: 0.0.0-use.local
   resolution: "omni-extension-automatic1111@workspace:."
   dependencies:
     alpinejs: ^3.12.3
     esbuild: ^0.18.4
+    flip-js: ^0.0.4
     typescript: ^5.1.3
   languageName: unknown
   linkType: soft
