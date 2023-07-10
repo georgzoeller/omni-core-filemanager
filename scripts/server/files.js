@@ -8,8 +8,8 @@ const script = {
 
 
     console.log('files', payload, limit, cursor)
-
-    let images =  ctx.app.cdn.kvStorage.getAny('file.',undefined,{limit,cursor}).map((file) => {
+    let tags = 'user.' + ctx.user.id
+    let images =  ctx.app.cdn.kvStorage.getAny('file.',undefined,{limit,cursor, tags},).map((file) => {
       return {...file.value, seq: file.seq}
     })
 
