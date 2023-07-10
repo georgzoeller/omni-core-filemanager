@@ -268,9 +268,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"omni-extension-automatic1111@workspace:.":
+"omni-core-filemanager@workspace:.":
   version: 0.0.0-use.local
-  resolution: "omni-extension-automatic1111@workspace:."
+  resolution: "omni-core-filemanager@workspace:."
   dependencies:
     alpinejs: ^3.12.3
     esbuild: ^0.18.4
