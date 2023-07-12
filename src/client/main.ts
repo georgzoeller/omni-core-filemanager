@@ -7,15 +7,17 @@ declare global {
   }
 }
 
-// -------------------- Viewer Mode: If q.focusedImage is set, we hide the gallery and show the image full screen -----------------------
+// -------------------- Viewer Mode: If q.focusedObject is set, we hide the gallery and show the image full screen -----------------------
 const args = new URLSearchParams(location.search)
 const params = JSON.parse(args.get('q'))
-let focusedImage = null
-focusedImage = params?.focusedImage
-let viewerMode = focusedImage ? true : false
+let focusedObject = null
+focusedObject = params?.focusedObject
+let viewerMode = focusedObject ? true : false
 
 
-const downloadImage = function(image) {
+
+
+const downloadObject = function(image) {
 
   let fid = image.ticket.fid
   const filename = image.fileName
@@ -65,7 +67,7 @@ const copyToClipboardComponent = () => {
       const blob = await res.blob();
       const data = [new ClipboardItem({ [blob.type]: blob })];
       await navigator.clipboard.write(data);
-      //alert('Image copied to clipboard');
+      //alert('Object copied to clipboard');
       //navigator.clipboard.writeText(this.copyText);
       this.copyNotification = true;
       let that = this;
@@ -77,17 +79,42 @@ const copyToClipboardComponent = () => {
 }
 
 
+class OmniResourceWrapper
+{
+
+  static isPlaceholder(obj:any)
+  {
+    return obj?.onclick != null
+  }
+
+  static isAudio(obj:any)
+  {
+    return obj && !OmniResourceWrapper.isPlaceholder(obj) && obj?.mimeType?.startsWith('audio/') || obj.mimeType == 'application/ogg'
+  }
+
+  static isObject(obj:any)
+  {
+    return obj && !OmniResourceWrapper.isPlaceholder(obj) &&  obj?.mimeType?.startsWith('image/')
+  }
+
+}
+
+let windowListener
+let closeListener
 
 const createGallery = function (imagesPerPage: number, imageApi: string) {
 
   return {
     viewerMode: viewerMode,
+    viewerExtension: null,
     currentPage: 1,
     imagesPerPage: imagesPerPage,
     imageApi: imageApi,
     images: viewerMode ? [] : Array(imagesPerPage + 1).fill({ url: '/ph_250.png', meta: {} }),
     totalPages: () => Math.ceil(this.images.length / this.imagesPerPage),
-    multiSelectedImages: [],
+    multiSelectedObjects: [],
+
+
 
     cursor: null,
     showInfo: false,
@@ -95,12 +122,53 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
     scale: 1, // zoom
     x: 0, //pan
     y: 0,
-    focusedImage: focusedImage || null,
+    focusedObject: focusedObject || null,
     hover: false,
+
+    closeViewerExtension() {
+      this.viewerExtension = null
+    },
+
+    async handleWindowEvent(e) {
+      console.log('handleWindowEvent', e.data)
+      if (e.data?.type === "close_editor_extension") {
+
+        this.closeViewerExtension()
+        if (e.data.newFocus)
+        {
+          this.focusObject(e.data.newFocus)
+        }
+        await this.fetchObjects({replace:true, limit: imagesPerPage})
+      }
+    },
 
     async init() {
 
-      await this.fetchImages({replace:true, limit: imagesPerPage})
+      await this.fetchObjects({replace:true, limit: imagesPerPage})
+
+      if (windowListener)
+      {
+        window.removeEventListener('message', windowListener)
+        windowListener = null
+      }
+      if (closeListener)
+      {
+        window.removeEventListener('close', closeListener)
+        closeListener = null
+      }
+      windowListener = this.handleWindowEvent.bind(this)
+
+      closeListener = () => {
+        window.removeEventListener('message', windowListener)
+        windowListener = null
+        window.removeEventListener('close', windowListener)
+        closeListener = null
+        console.log('closed')
+      }
+
+      window.addEventListener('message', windowListener)
+      window.addEventListener('close', closeListener)
+
 
 
 
@@ -108,7 +176,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
     async handleUpload(files: FileList){
       const uploaded = await this.uploadFiles(files)
 
-      await this.fetchImages({replace:true, limit: imagesPerPage})
+      await this.fetchObjects({replace:true, limit: imagesPerPage})
 
 
     },
@@ -246,7 +314,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
           if (lastCursor != this.cursor || replace) {
             this.images.push({
               onclick: async () => {
-                await self.fetchImages({ cursor: self.cursor })
+                await self.fetchObjects({ cursor: self.cursor })
               }, url: '/more.png', meta: {}
             })
           }
@@ -259,7 +327,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
 
 
-    async fetchImages(opts?: { cursor?: string, limit?: number,  replace?: boolean}) {
+    async fetchObjects(opts?: { cursor?: string, limit?: number,  replace?: boolean}) {
       if (this.viewerMode) {
         return Promise.resolve()
       }
@@ -277,15 +345,15 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
 
     },
-    selectImage(img) {
+    selectObject(img) {
       if (img.onclick) {
         return
       }
-      const idx = this.multiSelectedImages.indexOf(img);
+      const idx = this.multiSelectedObjects.indexOf(img);
       if (idx > -1) {
-        this.multiSelectedImages.splice(idx, 1);  // Deselect the image if it's already selected
+        this.multiSelectedObjects.splice(idx, 1);  // Deselect the image if it's already selected
       } else {
-        this.multiSelectedImages.push(img);  // Select the image
+        this.multiSelectedObjects.push(img);  // Select the image
       }
     },
     paginate() {
@@ -297,10 +365,10 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       return this.images
     },
 
-    async nextImage() {
-      const currentIndex = this.images.indexOf(this.focusedImage);
+    async nextObject() {
+      const currentIndex = this.images.indexOf(this.focusedObject);
       if (currentIndex < this.images.length - 1) {
-        await this.focusImage(this.images[currentIndex + 1]);
+        await this.focusObject(this.images[currentIndex + 1]);
       }
 
     },
@@ -315,10 +383,10 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       }, 200); // Adjust this delay as needed
     },
 
-    async previousImage() {
-      const currentIndex = this.images.indexOf(this.focusedImage);
+    async previousObject() {
+      const currentIndex = this.images.indexOf(this.focusedObject);
       if (currentIndex > 0) {
-        await this.focusImage(this.images[currentIndex - 1]);
+        await this.focusObject(this.images[currentIndex - 1]);
       }
 
     },
@@ -337,7 +405,14 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       this.hover = false;
     },
 
-    async focusImage(img) {
+    async focusObject(img) {
+      if (img == null)
+      {
+        this.viewerExtension = null
+        this.focusedObject = null
+        return
+      }
+
       this.animateTransition()
       this.x = 0
       this.y = 0
@@ -346,8 +421,8 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         await img.onclick.call(img)
         return
       }
-      this.focusedImage = img;
-      console.log('focusImage', img)
+      this.focusedObject = img;
+      console.log('focusObject', img)
     },
 
     previousPage() {
@@ -364,7 +439,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
           images: img, commands: [
             { 'id': 'run', title: '🞂 Run', args: [null, img] }]
         }, ['no-picture'])
-        this.multiSelectedImages = []
+        this.multiSelectedObjects = []
       }
       else {
         //@ts-expect-error
@@ -375,7 +450,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       }
 
     },
-    async exportImage(img) {
+    async exportObject(img) {
 
       const imageFid = img
       const action = 'export'
@@ -387,14 +462,14 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         alert('No active workflow')
       }
       const payload = { imageFid, action, args, recipe:workflow }
-      const resultImage = (<any>await runExtensionScript('export', payload)).image
-      await downloadImage(resultImage)
-      await this.fetchImages({replace:true, limit: imagesPerPage})
+      const resultObject = (<any>await runExtensionScript('export', payload)).image
+      await downloadObject(resultObject)
+      await this.fetchObjects({replace:true, limit: imagesPerPage})
 
 
     },
 
-    async importImage(img) {
+    async importObject(img) {
 
       let args = {
         action: 'import',
@@ -406,7 +481,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
 
     },
-    zoomImage(event) {
+    zoomObject(event) {
       // Determine whether the wheel was scrolled up or down
       const direction = event.deltaY < 0 ? 0.1 : -0.1;
 
@@ -442,7 +517,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         return
       }
 
-      this.multiSelectedImages = []
+      this.multiSelectedObjects = []
       if (data.deleted) {
 
         this.images = this.images.filter(img => {
@@ -453,9 +528,9 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
           return !deleted
         })
 
-        if (this.focusedImage) {
-          if (data.deleted.includes(this.focusedImage.ticket.fid)) {
-            this.focusedImage = null
+        if (this.focusedObject) {
+          if (data.deleted.includes(this.focusedObject.ticket.fid)) {
+            this.focusedObject = null
             // In viewer mode, we close the extension if the focused image is deleted
             if (this.viewerMode === true) {
               //@ts-expect-error
@@ -464,7 +539,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
           }
         }
 
-        await this.fetchImages({cursor: this.cursor, limit: data.deleted.length})
+        await this.fetchObjects({cursor: this.cursor, limit: data.deleted.length})
 
       }
 
@@ -480,6 +555,9 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 window.Alpine = Alpine
 document.addEventListener('alpine:init', async () => {
   Alpine.data('appState', () => ({
+
+    Resource: OmniResourceWrapper,
+
     copyToClipboardComponent,
     createGallery,
     async copyToClipboard(imgUrl) {
@@ -488,7 +566,7 @@ document.addEventListener('alpine:init', async () => {
         const blob = await res.blob();
         const data = [new ClipboardItem({ [blob.type]: blob })];
         await navigator.clipboard.write(data);
-        alert('Image copied to clipboard');
+        alert('Object copied to clipboard');
       } catch (err) {
         console.error(err.name, err.message);
       }

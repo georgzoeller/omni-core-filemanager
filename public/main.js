@@ -2994,10 +2994,10 @@ var module_default = src_default;
 // main.ts
 var args = new URLSearchParams(location.search);
 var params = JSON.parse(args.get("q"));
-var focusedImage = null;
-focusedImage = params?.focusedImage;
-var viewerMode = focusedImage ? true : false;
-var downloadImage = function(image) {
+var focusedObject = null;
+focusedObject = params?.focusedObject;
+var viewerMode = focusedObject ? true : false;
+var downloadObject = function(image) {
   let fid = image.ticket.fid;
   const filename = image.fileName;
   fetch("/fid/" + fid + "?download=true").then((response) => response.blob()).then((blob) => {
@@ -3042,15 +3042,29 @@ var copyToClipboardComponent = () => {
     }
   };
 };
+var OmniResourceWrapper = class _OmniResourceWrapper {
+  static isPlaceholder(obj) {
+    return obj?.onclick != null;
+  }
+  static isAudio(obj) {
+    return obj && !_OmniResourceWrapper.isPlaceholder(obj) && obj?.mimeType?.startsWith("audio/") || obj.mimeType == "application/ogg";
+  }
+  static isObject(obj) {
+    return obj && !_OmniResourceWrapper.isPlaceholder(obj) && obj?.mimeType?.startsWith("image/");
+  }
+};
+var windowListener;
+var closeListener;
 var createGallery = function(imagesPerPage, imageApi) {
   return {
     viewerMode,
+    viewerExtension: null,
     currentPage: 1,
     imagesPerPage,
     imageApi,
     images: viewerMode ? [] : Array(imagesPerPage + 1).fill({ url: "/ph_250.png", meta: {} }),
     totalPages: () => Math.ceil(this.images.length / this.imagesPerPage),
-    multiSelectedImages: [],
+    multiSelectedObjects: [],
     cursor: null,
     showInfo: false,
     loading: false,
@@ -3060,14 +3074,45 @@ var createGallery = function(imagesPerPage, imageApi) {
     x: 0,
     //pan
     y: 0,
-    focusedImage: focusedImage || null,
+    focusedObject: focusedObject || null,
     hover: false,
+    closeViewerExtension() {
+      this.viewerExtension = null;
+    },
+    async handleWindowEvent(e) {
+      console.log("handleWindowEvent", e.data);
+      if (e.data?.type === "close_editor_extension") {
+        this.closeViewerExtension();
+        if (e.data.newFocus) {
+          this.focusObject(e.data.newFocus);
+        }
+        await this.fetchObjects({ replace: true, limit: imagesPerPage });
+      }
+    },
     async init() {
-      await this.fetchImages({ replace: true, limit: imagesPerPage });
+      await this.fetchObjects({ replace: true, limit: imagesPerPage });
+      if (windowListener) {
+        window.removeEventListener("message", windowListener);
+        windowListener = null;
+      }
+      if (closeListener) {
+        window.removeEventListener("close", closeListener);
+        closeListener = null;
+      }
+      windowListener = this.handleWindowEvent.bind(this);
+      closeListener = () => {
+        window.removeEventListener("message", windowListener);
+        windowListener = null;
+        window.removeEventListener("close", windowListener);
+        closeListener = null;
+        console.log("closed");
+      };
+      window.addEventListener("message", windowListener);
+      window.addEventListener("close", closeListener);
     },
     async handleUpload(files) {
       const uploaded = await this.uploadFiles(files);
-      await this.fetchImages({ replace: true, limit: imagesPerPage });
+      await this.fetchObjects({ replace: true, limit: imagesPerPage });
     },
     async runRecipeWith(runFiles) {
       let files = module_default.raw([...runFiles].filter((f) => f?.mimeType.startsWith("image/") || f?.mimeType.startsWith("audio/") || f.mimeType == "application/ogg" || f.mimeType == "application/pdf" || f.mimeType == "application/x-pdf"));
@@ -3172,7 +3217,7 @@ var createGallery = function(imagesPerPage, imageApi) {
           if (lastCursor != this.cursor || replace) {
             this.images.push({
               onclick: async () => {
-                await self.fetchImages({ cursor: self.cursor });
+                await self.fetchObjects({ cursor: self.cursor });
               },
               url: "/more.png",
               meta: {}
@@ -3182,7 +3227,7 @@ var createGallery = function(imagesPerPage, imageApi) {
         this.totalPages = Math.ceil(this.images.length / this.imagesPerPage);
       }
     },
-    async fetchImages(opts) {
+    async fetchObjects(opts) {
       if (this.viewerMode) {
         return Promise.resolve();
       }
@@ -3196,24 +3241,24 @@ var createGallery = function(imagesPerPage, imageApi) {
       const data2 = await runExtensionScript("files", body);
       this.addItems(data2.images, opts?.replace);
     },
-    selectImage(img) {
+    selectObject(img) {
       if (img.onclick) {
         return;
       }
-      const idx = this.multiSelectedImages.indexOf(img);
+      const idx = this.multiSelectedObjects.indexOf(img);
       if (idx > -1) {
-        this.multiSelectedImages.splice(idx, 1);
+        this.multiSelectedObjects.splice(idx, 1);
       } else {
-        this.multiSelectedImages.push(img);
+        this.multiSelectedObjects.push(img);
       }
     },
     paginate() {
       return this.images;
     },
-    async nextImage() {
-      const currentIndex = this.images.indexOf(this.focusedImage);
+    async nextObject() {
+      const currentIndex = this.images.indexOf(this.focusedObject);
       if (currentIndex < this.images.length - 1) {
-        await this.focusImage(this.images[currentIndex + 1]);
+        await this.focusObject(this.images[currentIndex + 1]);
       }
     },
     animateTransition() {
@@ -3225,10 +3270,10 @@ var createGallery = function(imagesPerPage, imageApi) {
         this.loading = false;
       }, 200);
     },
-    async previousImage() {
-      const currentIndex = this.images.indexOf(this.focusedImage);
+    async previousObject() {
+      const currentIndex = this.images.indexOf(this.focusedObject);
       if (currentIndex > 0) {
-        await this.focusImage(this.images[currentIndex - 1]);
+        await this.focusObject(this.images[currentIndex - 1]);
       }
     },
     nextPage() {
@@ -3242,7 +3287,12 @@ var createGallery = function(imagesPerPage, imageApi) {
     mouseLeave() {
       this.hover = false;
     },
-    async focusImage(img) {
+    async focusObject(img) {
+      if (img == null) {
+        this.viewerExtension = null;
+        this.focusedObject = null;
+        return;
+      }
       this.animateTransition();
       this.x = 0;
       this.y = 0;
@@ -3251,8 +3301,8 @@ var createGallery = function(imagesPerPage, imageApi) {
         await img.onclick.call(img);
         return;
       }
-      this.focusedImage = img;
-      console.log("focusImage", img);
+      this.focusedObject = img;
+      console.log("focusObject", img);
     },
     previousPage() {
       if (this.currentPage > 1) {
@@ -3267,7 +3317,7 @@ var createGallery = function(imagesPerPage, imageApi) {
             { "id": "run", title: "\u{1F782} Run", args: [null, img] }
           ]
         }, ["no-picture"]);
-        this.multiSelectedImages = [];
+        this.multiSelectedObjects = [];
       } else {
         window.parent.client.sendSystemMessage(``, "text/markdown", {
           images: [{ ...img }],
@@ -3277,7 +3327,7 @@ var createGallery = function(imagesPerPage, imageApi) {
         }, ["no-picture"]);
       }
     },
-    async exportImage(img) {
+    async exportObject(img) {
       const imageFid = img;
       const action = "export";
       let args2 = {};
@@ -3286,11 +3336,11 @@ var createGallery = function(imagesPerPage, imageApi) {
         alert("No active workflow");
       }
       const payload = { imageFid, action, args: args2, recipe: workflow };
-      const resultImage = (await runExtensionScript("export", payload)).image;
-      await downloadImage(resultImage);
-      await this.fetchImages({ replace: true, limit: imagesPerPage });
+      const resultObject = (await runExtensionScript("export", payload)).image;
+      await downloadObject(resultObject);
+      await this.fetchObjects({ replace: true, limit: imagesPerPage });
     },
-    async importImage(img) {
+    async importObject(img) {
       let args2 = {
         action: "import",
         imageFid: img.ticket.fid
@@ -3299,7 +3349,7 @@ var createGallery = function(imagesPerPage, imageApi) {
       console.log("import", file);
       window.parent.location.href = window.parent.location.protocol + "//" + window.parent.location.host + `/?rx=${encodeURIComponent(file.url)}`;
     },
-    zoomImage(event) {
+    zoomObject(event) {
       const direction = event.deltaY < 0 ? 0.1 : -0.1;
       const currentScale = this.$refs.zoomImg.style.transform || "scale(1)";
       const currentScaleValue = parseFloat(currentScale.slice(6, -1));
@@ -3322,7 +3372,7 @@ var createGallery = function(imagesPerPage, imageApi) {
         window.parent.client.sendSystemMessage("Failed to delete image(s) " + data2.reason, "text/plain", {}, ["error"]);
         return;
       }
-      this.multiSelectedImages = [];
+      this.multiSelectedObjects = [];
       if (data2.deleted) {
         this.images = this.images.filter((img2) => {
           console.log(img2);
@@ -3331,15 +3381,15 @@ var createGallery = function(imagesPerPage, imageApi) {
           let deleted = data2.deleted.includes(img2.ticket.fid);
           return !deleted;
         });
-        if (this.focusedImage) {
-          if (data2.deleted.includes(this.focusedImage.ticket.fid)) {
-            this.focusedImage = null;
+        if (this.focusedObject) {
+          if (data2.deleted.includes(this.focusedObject.ticket.fid)) {
+            this.focusedObject = null;
             if (this.viewerMode === true) {
               window.parent.client.workbench.hideExtension();
             }
           }
         }
-        await this.fetchImages({ cursor: this.cursor, limit: data2.deleted.length });
+        await this.fetchObjects({ cursor: this.cursor, limit: data2.deleted.length });
       }
     }
   };
@@ -3349,6 +3399,7 @@ document.addEventListener(
   "alpine:init",
   async () => {
     module_default.data("appState", () => ({
+      Resource: OmniResourceWrapper,
       copyToClipboardComponent,
       createGallery,
       async copyToClipboard(imgUrl) {
@@ -3357,7 +3408,7 @@ document.addEventListener(
           const blob = await res.blob();
           const data2 = [new ClipboardItem({ [blob.type]: blob })];
           await navigator.clipboard.write(data2);
-          alert("Image copied to clipboard");
+          alert("Object copied to clipboard");
         } catch (err) {
           console.error(err.name, err.message);
         }
