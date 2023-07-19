@@ -3222,7 +3222,8 @@ var createGallery = function(imagesPerPage, imageApi) {
                 await self.fetchObjects({ cursor: self.cursor });
               },
               url: "/more.png",
-              meta: {}
+              meta: {},
+              fileName: "Load More..."
             });
           }
         }

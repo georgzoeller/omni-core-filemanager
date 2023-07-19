@@ -96,7 +96,7 @@ class OmniResourceWrapper
   {
     return obj && !OmniResourceWrapper.isPlaceholder(obj) &&  obj?.mimeType?.startsWith('image/')
   }
-  
+
 
 }
 
@@ -320,7 +320,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
             this.images.push({
               onclick: async () => {
                 await self.fetchObjects({ cursor: self.cursor })
-              }, url: '/more.png', meta: {}
+              }, url: '/more.png', meta: {}, fileName: "Load More..."
             })
           }
         }

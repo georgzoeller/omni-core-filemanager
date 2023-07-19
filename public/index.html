@@ -168,12 +168,15 @@
               <div class="overflow-hidden py-2 px-2 w-full">
                 <div class="flex flex-wrap justify-left items-start gap-1.5">
                   <template x-for="(img, idx) in (await paginate()) || []" :key="idx">
-                    <div style="width: 256px; height: 256px;" class="shadow-lg shadow-black drop-shadow-sm bg-gray-300 rounded-sm  ">
+                    <div style="width: 256px; height: 256px;" class="bg-gray-300 rounded-sm  ">
+                      <div x-show="img === hoverItem" class="absolute z-10 p-2 text-xs text-white drop-shadow-xl shadow-black h-5 w-full" style="max-width: 256px; float: left"  x-text="img?.fileName">                      </div>
                       <img
                       @mouseenter="hoverItem = img"
                       @mouseleave="hoverItem = null"
                       @contextmenu.prevent="selectObject(img)" @click="await focusObject(img)" :src="getDisplayUrl(img, {width: 256, height: 256, fit: 'contain'})" class="object-cover rounded-sm object-top" style="width: 256px; height: 256px; cursor: zoom-in" :class="{ 'border-4 border-yellow-300': multiSelectedObjects.includes(img), 'border-4 border-white': focusedObject === img }" alt="image.meta.fileName" />
+
                     </div>
+
                   </template>
                 </div>
               </div>
@@ -191,8 +194,8 @@
         <!-- Object Viewer -->
         <div x-cloak x-show="viewerMode || focusedObject" class="fixed  top-0 left-0 w-full h-full flex items-center justify-center bg-gray-300 opacity-100 z-10" @click="viewerMode ? window.parent.client.workbench.activeScreen ='editor' : focusObject(null)" @keydown.window.escape=" viewerExtension ? closeViewerExtension() : viewerMode ?  window.parent.client.workbench.activeScreen ='editor' : focusObject(null)" @keydown.window.arrow-right="nextObject()" @keydown.window.arrow-left="previousObject()">
           <div class="relative flex items-center justify-center bg-black bg-opacity-40" style="width: 98vw; height: 98vh; overflow: hidden;" @click.stop @contextmenu.prevent @mouseenter="showInfo = true" @mouseleave="showInfo = false">
-            
-            <iframe x-show="viewerExtension" :src="viewerExtension" style="width:100%;height:100%;" @keyup.window.esc.stop.prevent="focusedObject(null)" >
+
+            <iframe x-show="viewerExtension" :src="viewerExtension" style="width:100%;height:100%;" @keyup.window.esc.stop.prevent="await focusObject(null)" >
 
             </iframe>
             <img x-show="focusedObject && !viewerExtension" :src="getDisplayUrl(focusedObject)" :style="{ transform: `scale(${scale}) translate(${x}px, ${y}px)`}" class="object-contain transition-opacity duration-200" :class="{ 'opacity-0': loading }" @wheel.prevent="zoomObject" @mousedown="startMoving" @mousemove="move" @mouseup="stopMoving" @mouseleave="stopMoving" x-ref="zoomImg" />
@@ -284,7 +287,8 @@
             <div x-show="!viewerExtension && showInfo" class="absolute bottom-0 left-0 right-0 p-2 gap-5 z-10 font-semibold drop-shadow shadow-black bg-white bg-opacity-50 text-sm flex justify-between items-center h-8">
               <span><span class="font-semibold"></span> <span x-text="focusedObject ? new Date(focusedObject.meta.created).toLocaleString(): ''"></span></span>
               <span><span class="font-semibold"></span> <span x-text="focusedObject?.mimeType?.startsWith('image/') ? focusedObject?.meta.width + 'x' + focusedObject?.meta.height + ' pixels' : ''"></span></span>
-              <span><span class="font-semibold"></span><span class="drop-shadow-md" x-text="focusedObject?.mimeType + ' ' + focusedObject?.meta?.type"></span></span>
+              <span><span class="font-semibold"></span><span class="drop-shadow-md" x-text="focusedObject?.mimeType"></span></span>
+              <span><span class="font-semibold"></span><span class="drop-shadow-md" x-text="focusedObject?.expires ? '⏱ expires ' + (new Date(focusedObject.expires)).toLocaleString() : '' "></span></span>
               <span><span class="font-semibold"></span><span class="drop-shadow-md" x-text="focusedObject?.fileName"></span></span>
 
             </div>
