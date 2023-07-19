@@ -116,12 +116,12 @@
 
   <body class="p-6 select-none overflow-hidden "
   >
-    <div class="m-h-screen bg-neutral-400" x-data="appState"  @keydown.window.prevent.stop.ctrl.shift.f="window.parent.client.workbench.activeExtension ? window.parent.client.workbench.hideExtension() :  window.parent.client.workbench.showExtension('omni-core-filemanager', {})">
-      <div id="container" class="" x-data="createGallery(35 , '')" @keydown.escape.window="viewerMode ? window.parent.client.workbench.hideExtension() : multiSelectedObjects.length>0 ? multiSelectedObjects = [] :  focusedObject ? focusObject(null) :  window.parent.client.workbench.hideExtension()">
+    <div class="m-h-screen bg-neutral-400  overflow-hidden " x-data="appState"  @keydown.window.prevent.stop.ctrl.shift.f="window.parent.client.workbench.activeExtension ? window.parent.client.workbench.hideExtension() :  window.parent.client.workbench.showExtension('omni-core-filemanager', {})">
+      <div id="container" class=" overflow-hidden " x-data="createGallery(35 , '')" @keydown.escape.window="viewerMode ? window.parent.client.workbench.hideExtension() : multiSelectedObjects.length>0 ? multiSelectedObjects = [] :  focusedObject ? focusObject(null) :  window.parent.client.workbench.hideExtension()">
         <!-- Gallery Nav  -->
         <div x-show="!viewerMode && !focusedObject" class="fixed top-0 left-0 w-full h-full flex flex-col items-center justify-center bg-neutral-400 opacity-100 overflow-hidden" >
-          <div x-data="{hoverItem: null}" class="relative p-2 flex flex-row items-top justify-center" style="width: 98vw; height: 98.9vh; overflow: hidden" >
-            <div class="absolute text-lg top-0 left-6 mx-auto p-2  flex justify-between items-center gap-2 h-12 text-black drop-shadow-md shadow-black bg-white rounded-lg">
+          <div x-data="{hoverItem: null}" class="relative p-2 flex flex-row items-top justify-center overflow-hidden" style="width: 98vw; height: 98.9vh; overflow: hidden" >
+            <div class="absolute text-lg top-0 left-6 mx-auto p-2  flex justify-between items-center gap-2 h-12 text-black drop-shadow-md shadow-black bg-white rounded-lg overflow-hidden">
 
               <span @click="await fetchObjects({limit: imagesPerPage,replace:true}); multiSelectedObjects=[]; window.scrollTo({ top: 0, behavior: 'smooth' }); "  class="flex text-black items-center justify-center w-auto h-8 px-3 py-1 text-xs bg-red-500/60  border-0 rounded-md cursor-pointer  hover:bg-gray-500 active:bg-gray-600 focus:bg-gray-600 focus:outline-none  hover:text-neutral-600 group">
                 <span></span>
