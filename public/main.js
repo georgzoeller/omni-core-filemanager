@@ -3049,7 +3049,7 @@ var OmniResourceWrapper = class _OmniResourceWrapper {
   static isAudio(obj) {
     return obj && !_OmniResourceWrapper.isPlaceholder(obj) && obj?.mimeType?.startsWith("audio/") || obj.mimeType == "application/ogg";
   }
-  static isObject(obj) {
+  static isImage(obj) {
     return obj && !_OmniResourceWrapper.isPlaceholder(obj) && obj?.mimeType?.startsWith("image/");
   }
 };
@@ -3175,6 +3175,8 @@ var createGallery = function(imagesPerPage, imageApi) {
         return "/audio.png";
       } else if (file?.mimeType?.startsWith("application/json") || file.mimeType == "text/json") {
         return "/json.png";
+      } else if (file?.mimeType?.startsWith("application/pdf")) {
+        return "/pdf.png";
       } else if (file?.mimeType?.startsWith("image/")) {
         if (opts && (opts.width || opts.height)) {
           let url = file.url;
@@ -3292,6 +3294,9 @@ var createGallery = function(imagesPerPage, imageApi) {
         this.viewerExtension = null;
         this.focusedObject = null;
         return;
+      }
+      if (img.mimeType === "application/pdf") {
+        this.viewerExtension = "/extensions/omni-core-viewers/pdf.html?file=" + encodeURIComponent(`/fid/${img.fid || img.ticket.fid}`);
       }
       this.animateTransition();
       this.x = 0;

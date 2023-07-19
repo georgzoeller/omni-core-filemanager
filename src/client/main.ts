@@ -92,10 +92,11 @@ class OmniResourceWrapper
     return obj && !OmniResourceWrapper.isPlaceholder(obj) && obj?.mimeType?.startsWith('audio/') || obj.mimeType == 'application/ogg'
   }
 
-  static isObject(obj:any)
+  static isImage(obj:any)
   {
     return obj && !OmniResourceWrapper.isPlaceholder(obj) &&  obj?.mimeType?.startsWith('image/')
   }
+  
 
 }
 
@@ -258,6 +259,10 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         return '/json.png'
       }
 
+      else if (file?.mimeType?.startsWith('application/pdf')) {
+        return '/pdf.png'
+      }
+
       else if (file?.mimeType?.startsWith('image/')) {
 
         if (opts && (opts.width || opts.height)) {
@@ -411,6 +416,11 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         this.viewerExtension = null
         this.focusedObject = null
         return
+      }
+
+      if (img.mimeType === 'application/pdf')
+      {
+        this.viewerExtension = '/extensions/omni-core-viewers/pdf.html?file='+encodeURIComponent(`/fid/${img.fid || img.ticket.fid}`)
       }
 
       this.animateTransition()
