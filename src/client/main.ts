@@ -299,6 +299,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       {
         images = [images]
       }
+
       images = images.filter(img=>OmniResourceWrapper.isImage(img))
       images.map(img => {
         //@ts-ignore
