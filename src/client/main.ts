@@ -288,12 +288,22 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       }
     },
 
-    async addToCanvas(img) {
-      if (img)
+    async addToCanvas(images) {
+
+      if (!images)
       {
+        return
+      }
+
+      if (!Array.isArray(images))
+      {
+        images = [images]
+      }
+      images = images.filter(img=>OmniResourceWrapper.isImage(img))
+      images.map(img => {
         //@ts-ignore
         window.parent?.client.runScript('add', ["omnitool.input_image_url", {img: 'fid://' + img.ticket.fid, preview: [JSON.parse(JSON.stringify(img))]}] )
-      }
+      })
     },
 
 

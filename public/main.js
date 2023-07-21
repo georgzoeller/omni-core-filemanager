@@ -3198,10 +3198,17 @@ var createGallery = function(imagesPerPage, imageApi) {
         return "/ph_250.png";
       }
     },
-    async addToCanvas(img) {
-      if (img) {
-        window.parent?.client.runScript("add", ["omnitool.input_image_url", { img: "fid://" + img.ticket.fid, preview: [JSON.parse(JSON.stringify(img))] }]);
+    async addToCanvas(images) {
+      if (!images) {
+        return;
       }
+      if (!Array.isArray(images)) {
+        images = [images];
+      }
+      images = images.filter((img) => OmniResourceWrapper.isImage(img));
+      images.map((img) => {
+        window.parent?.client.runScript("add", ["omnitool.input_image_url", { img: "fid://" + img.ticket.fid, preview: [JSON.parse(JSON.stringify(img))] }]);
+      });
     },
     async addItems(images, replace = false) {
       let lastCursor = this.cursor;
