@@ -3066,7 +3066,7 @@ var createGallery = function(imagesPerPage, imageApi) {
     totalPages: () => Math.ceil(this.images.length / this.imagesPerPage),
     multiSelectedObjects: [],
     cursor: null,
-    showInfo: false,
+    showInfo: true,
     loading: false,
     // for anims
     scale: 1,
@@ -3302,6 +3302,15 @@ var createGallery = function(imagesPerPage, imageApi) {
     mouseLeave() {
       this.hover = false;
     },
+    async runViewerAction(obj, action) {
+      if (OmniResourceWrapper.isImage(obj)) {
+        if (action === "edit") {
+          this.viewerExtension = "/extensions/omni-extension-minipaint/?q=" + encodeURIComponent(JSON.stringify({ url: this.focusedObject?.url, filename: this.focusedObject?.fileName }));
+          this.showInfo = false;
+          return;
+        }
+      }
+    },
     async focusObject(img) {
       if (img == null) {
         this.viewerExtension = null;
@@ -3310,6 +3319,8 @@ var createGallery = function(imagesPerPage, imageApi) {
       }
       if (img.mimeType === "application/pdf") {
         this.viewerExtension = "/extensions/omni-core-viewers/pdf.html?file=" + encodeURIComponent(`/fid/${img.fid || img.ticket.fid}`);
+      } else if (OmniResourceWrapper.isAudio(img)) {
+        this.viewerExtension = "/extensions/omni-extension-plyr/?q=" + encodeURIComponent(JSON.stringify({ sources: [img] }));
       }
       this.animateTransition();
       this.x = 0;
@@ -3328,21 +3339,35 @@ var createGallery = function(imagesPerPage, imageApi) {
       }
     },
     async sendToChat(img) {
-      if (Array.isArray(img)) {
-        window.parent.client.sendSystemMessage(``, "text/markdown", {
-          images: img,
-          commands: [
-            { "id": "run", title: "\u{1F782} Run", args: [null, img] }
-          ]
-        }, ["no-picture"]);
-        this.multiSelectedObjects = [];
-      } else {
-        window.parent.client.sendSystemMessage(``, "text/markdown", {
-          images: [{ ...img }],
-          commands: [
-            { "id": "run", title: "\u{1F782} Run", args: [null, { ...img }] }
-          ]
-        }, ["no-picture"]);
+      let type;
+      if (OmniResourceWrapper.isAudio(img)) {
+        type = "audio";
+      } else if (OmniResourceWrapper.isImage(img)) {
+        type = "images";
+      } else if (img.mimeType === "application/pdf") {
+        type = "documents";
+      }
+      if (type) {
+        if (Array.isArray(img)) {
+          let obj = {};
+          obj[type] = img;
+          window.parent.client.sendSystemMessage(``, "text/markdown", {
+            ...obj,
+            commands: [
+              { "id": "run", title: "\u{1F782} Run", args: [null, img] }
+            ]
+          }, ["no-picture"]);
+          this.multiSelectedObjects = [];
+        } else {
+          let obj = {};
+          obj[type] = [{ ...img }];
+          window.parent.client.sendSystemMessage(``, "text/markdown", {
+            ...obj,
+            commands: [
+              { "id": "run", title: "\u{1F782} Run", args: [null, { ...img }] }
+            ]
+          }, ["no-picture"]);
+        }
       }
     },
     async exportObject(img) {

@@ -114,11 +114,8 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
     images: viewerMode ? [] : Array(imagesPerPage + 1).fill({ url: '/ph_250.png', meta: {} }),
     totalPages: () => Math.ceil(this.images.length / this.imagesPerPage),
     multiSelectedObjects: [],
-
-
-
     cursor: null,
-    showInfo: false,
+    showInfo: true,
     loading: false, // for anims
     scale: 1, // zoom
     x: 0, //pan
@@ -128,6 +125,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
     closeViewerExtension() {
       this.viewerExtension = null
+
     },
 
     async handleWindowEvent(e) {
@@ -429,6 +427,19 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       this.hover = false;
     },
 
+    async runViewerAction(obj:any, action:string) {
+      if (OmniResourceWrapper.isImage(obj))
+      {
+        if(action === 'edit')
+        {
+          this.viewerExtension='/extensions/omni-extension-minipaint/?q='+encodeURIComponent(JSON.stringify({url: this.focusedObject?.url, filename: this.focusedObject?.fileName}));
+
+          this.showInfo = false
+          return
+        }
+      }
+    },
+
     async focusObject(img) {
       if (img == null)
       {
@@ -437,11 +448,15 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         return
       }
 
+
       if (img.mimeType === 'application/pdf')
       {
         this.viewerExtension = '/extensions/omni-core-viewers/pdf.html?file='+encodeURIComponent(`/fid/${img.fid || img.ticket.fid}`)
       }
-
+      else if (OmniResourceWrapper.isAudio(img))
+      {
+        this.viewerExtension = '/extensions/omni-extension-plyr/?q='+encodeURIComponent(JSON.stringify({sources:[img]}))
+      }
       this.animateTransition()
       this.x = 0
       this.y = 0
@@ -462,20 +477,44 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
     async sendToChat(img) {
 
-      if (Array.isArray(img)) {
-        //@ts-expect-error
-        window.parent.client.sendSystemMessage(``, 'text/markdown', {
-          images: img, commands: [
-            { 'id': 'run', title: '🞂 Run', args: [null, img] }]
-        }, ['no-picture'])
-        this.multiSelectedObjects = []
+      let type
+      if (OmniResourceWrapper.isAudio(img))
+      {
+        type = 'audio'
       }
-      else {
-        //@ts-expect-error
-        window.parent.client.sendSystemMessage(``, 'text/markdown', {
-          images: [{ ...img }], commands: [
-            { 'id': 'run', title: '🞂 Run', args: [null, { ...img }] }]
-        }, ['no-picture'])
+      else if (OmniResourceWrapper.isImage(img))
+      {
+        type = 'images'
+      }
+      else if (img.mimeType === 'application/pdf')
+      {
+        type = 'documents'
+      }
+      if (type)
+      {
+
+        if (Array.isArray(img)) {
+
+          let obj = {}
+          obj[type] = img
+          //@ts-expect-error
+          window.parent.client.sendSystemMessage(``, 'text/markdown', {
+            ...obj, commands: [
+              { 'id': 'run', title: '🞂 Run', args: [null, img] }]
+          }, ['no-picture'])
+          this.multiSelectedObjects = []
+        }
+        else {
+
+          let obj = {}
+          obj[type] =  [{ ...img }]
+
+          //@ts-expect-error
+          window.parent.client.sendSystemMessage(``, 'text/markdown', {
+            ...obj, commands: [
+              { 'id': 'run', title: '🞂 Run', args: [null, { ...img }] }]
+          }, ['no-picture'])
+        }
       }
 
     },
