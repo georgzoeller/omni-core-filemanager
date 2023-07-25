@@ -168,6 +168,10 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       window.addEventListener('message', windowListener)
       window.addEventListener('close', closeListener)
 
+      if (viewerMode)
+      {
+        this.focusObject(focusedObject)
+      }
 
 
 
@@ -440,15 +444,8 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       }
     },
 
-    async focusObject(img) {
-      if (img == null)
-      {
-        this.viewerExtension = null
-        this.focusedObject = null
-        return
-      }
-
-
+    async enterViewerMode(img)
+    {
       if (img.mimeType === 'application/pdf')
       {
         this.viewerExtension = '/extensions/omni-core-viewers/pdf.html?file='+encodeURIComponent(`/fid/${img.fid || img.ticket.fid}`)
@@ -457,6 +454,22 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       {
         this.viewerExtension = '/extensions/omni-extension-plyr/?q='+encodeURIComponent(JSON.stringify({sources:[img]}))
       }
+    },
+
+    async focusObject(img) {
+
+
+
+      if (img == null)
+      {
+        this.viewerExtension = null
+        this.focusedObject = null
+        return
+      }
+
+      this.enterViewerMode(img)
+
+
       this.animateTransition()
       this.x = 0
       this.y = 0

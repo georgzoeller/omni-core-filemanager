@@ -3109,6 +3109,9 @@ var createGallery = function(imagesPerPage, imageApi) {
       };
       window.addEventListener("message", windowListener);
       window.addEventListener("close", closeListener);
+      if (viewerMode) {
+        this.focusObject(focusedObject);
+      }
     },
     async handleUpload(files) {
       const uploaded = await this.uploadFiles(files);
@@ -3311,17 +3314,20 @@ var createGallery = function(imagesPerPage, imageApi) {
         }
       }
     },
+    async enterViewerMode(img) {
+      if (img.mimeType === "application/pdf") {
+        this.viewerExtension = "/extensions/omni-core-viewers/pdf.html?file=" + encodeURIComponent(`/fid/${img.fid || img.ticket.fid}`);
+      } else if (OmniResourceWrapper.isAudio(img)) {
+        this.viewerExtension = "/extensions/omni-extension-plyr/?q=" + encodeURIComponent(JSON.stringify({ sources: [img] }));
+      }
+    },
     async focusObject(img) {
       if (img == null) {
         this.viewerExtension = null;
         this.focusedObject = null;
         return;
       }
-      if (img.mimeType === "application/pdf") {
-        this.viewerExtension = "/extensions/omni-core-viewers/pdf.html?file=" + encodeURIComponent(`/fid/${img.fid || img.ticket.fid}`);
-      } else if (OmniResourceWrapper.isAudio(img)) {
-        this.viewerExtension = "/extensions/omni-extension-plyr/?q=" + encodeURIComponent(JSON.stringify({ sources: [img] }));
-      }
+      this.enterViewerMode(img);
       this.animateTransition();
       this.x = 0;
       this.y = 0;
