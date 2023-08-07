@@ -2998,7 +2998,7 @@ var focusedObject = null;
 focusedObject = params?.focusedObject;
 var viewerMode = focusedObject ? true : false;
 var downloadObject = function(image) {
-  let fid = image.ticket.fid;
+  let fid = image.fid;
   const filename = image.fileName;
   fetch("/fid/" + fid + "?download=true").then((response) => response.blob()).then((blob) => {
     const url = URL.createObjectURL(blob);
@@ -3150,7 +3150,7 @@ var createGallery = function(imagesPerPage, imageApi) {
               });
               if (response.ok) {
                 const data2 = await response.json();
-                if (data2.length > 0 && data2[0].ticket && data2[0].ticket.fid) {
+                if (data2.length > 0 && data2[0].ticket && data2[0].fid) {
                   return data2[0];
                 } else {
                   console.warn("Failed to upload file", { data: data2, file });
@@ -3210,7 +3210,7 @@ var createGallery = function(imagesPerPage, imageApi) {
       }
       images = images.filter((img) => OmniResourceWrapper.isImage(img));
       images.map((img) => {
-        window.parent?.client.runScript("add", ["omnitool.input_image_url", { img: "fid://" + img.ticket.fid, preview: [JSON.parse(JSON.stringify(img))] }]);
+        window.parent?.client.runScript("add", ["omnitool.input_image_url", { img: "fid://" + img.fid, preview: [JSON.parse(JSON.stringify(img))] }]);
       });
     },
     async addItems(images, replace = false) {
@@ -3316,7 +3316,7 @@ var createGallery = function(imagesPerPage, imageApi) {
     },
     async enterViewerMode(img) {
       if (img.mimeType === "application/pdf") {
-        this.viewerExtension = "/extensions/omni-core-viewers/pdf.html?file=" + encodeURIComponent(`/fid/${img.fid || img.ticket.fid}`);
+        this.viewerExtension = "/extensions/omni-core-viewers/pdf.html?file=" + encodeURIComponent(`/fid/${img.fid}`);
       } else if (OmniResourceWrapper.isAudio(img)) {
         this.viewerExtension = "/extensions/omni-extension-plyr/?q=" + encodeURIComponent(JSON.stringify({ sources: [img] }));
       }
@@ -3392,7 +3392,7 @@ var createGallery = function(imagesPerPage, imageApi) {
     async importObject(img) {
       let args2 = {
         action: "import",
-        imageFid: img.ticket.fid
+        imageFid: img.fid
       };
       const file = (await runExtensionScript("export", args2)).file;
       console.log("import", file);
@@ -3427,11 +3427,11 @@ var createGallery = function(imagesPerPage, imageApi) {
           console.log(img2);
           if (img2.onclick != null)
             return true;
-          let deleted = data2.deleted.includes(img2.ticket.fid);
+          let deleted = data2.deleted.includes(img2.fid);
           return !deleted;
         });
         if (this.focusedObject) {
-          if (data2.deleted.includes(this.focusedObject.ticket.fid)) {
+          if (data2.deleted.includes(this.focusedObject.fid)) {
             this.focusedObject = null;
             if (this.viewerMode === true) {
               window.parent.client.workbench.hideExtension();

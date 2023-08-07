@@ -19,7 +19,7 @@ let viewerMode = focusedObject ? true : false
 
 const downloadObject = function(image) {
 
-  let fid = image.ticket.fid
+  let fid = image.fid
   const filename = image.fileName
 
   fetch('/fid/' + fid + '?download=true')
@@ -227,7 +227,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
               if (response.ok) {
                 const data = await response.json();
 
-                if (data.length > 0 && data[0].ticket && data[0].ticket.fid) {
+                if (data.length > 0 && data[0].ticket && data[0].fid) {
                   return data[0];
                 } else {
                   console.warn('Failed to upload file', { data, file });
@@ -305,7 +305,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       images = images.filter(img=>OmniResourceWrapper.isImage(img))
       images.map(img => {
         //@ts-ignore
-        window.parent?.client.runScript('add', ["omnitool.input_image_url", {img: 'fid://' + img.ticket.fid, preview: [JSON.parse(JSON.stringify(img))]}] )
+        window.parent?.client.runScript('add', ["omnitool.input_image_url", {img: 'fid://' + img.fid, preview: [JSON.parse(JSON.stringify(img))]}] )
       })
     },
 
@@ -448,7 +448,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
     {
       if (img.mimeType === 'application/pdf')
       {
-        this.viewerExtension = '/extensions/omni-core-viewers/pdf.html?file='+encodeURIComponent(`/fid/${img.fid || img.ticket.fid}`)
+        this.viewerExtension = '/extensions/omni-core-viewers/pdf.html?file='+encodeURIComponent(`/fid/${img.fid}`)
       }
       else if (OmniResourceWrapper.isAudio(img))
       {
@@ -554,7 +554,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
       let args = {
         action: 'import',
-        imageFid: img.ticket.fid,
+        imageFid: img.fid,
       }
       const file = <any>(await runExtensionScript('export', args)).file
       console.log('import', file)
@@ -605,12 +605,12 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
           console.log(img)
           if (img.onclick != null) return true
 
-          let deleted = data.deleted.includes(img.ticket.fid)
+          let deleted = data.deleted.includes(img.fid)
           return !deleted
         })
 
         if (this.focusedObject) {
-          if (data.deleted.includes(this.focusedObject.ticket.fid)) {
+          if (data.deleted.includes(this.focusedObject.fid)) {
             this.focusedObject = null
             // In viewer mode, we close the extension if the focused image is deleted
             if (this.viewerMode === true) {
