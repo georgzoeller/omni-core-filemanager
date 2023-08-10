@@ -3030,7 +3030,7 @@ var copyToClipboardComponent = () => {
     copyText: "",
     copyNotification: false,
     async copyToClipboard(img) {
-      const res = await fetch(img.url);
+      const res = await fetch("/fid/" + img.ticket.fid || img.fid);
       const blob = await res.blob();
       const data2 = [new ClipboardItem({ [blob.type]: blob })];
       await navigator.clipboard.write(data2);
