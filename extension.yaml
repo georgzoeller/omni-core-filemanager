@@ -6,3 +6,4 @@ origin: https://github.com/georgzoeller/omni-core-filemanager.git
 client:
   addToWorkbench: true
   hideBackButton: true
+  singleton: true
