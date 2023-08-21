@@ -265,6 +265,10 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         return '/pdf.png'
       }
 
+      else if (file?.mimeType?.startsWith('text/')) {
+        return '/document.png'
+      }
+
       else if (file?.mimeType?.startsWith('image/')) {
 
         if (opts && (opts.width || opts.height)) {
@@ -450,10 +454,20 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       {
         this.viewerExtension = '/extensions/omni-core-viewers/pdf.html?file='+encodeURIComponent(`/fid/${img.fid}`)
       }
+      else if( img.mimeType === 'text/markdown' || img.mimeType === 'text/plain')
+      {
+        this.viewerExtension = '/extensions/omni-core-viewers/markdown.html?q='+encodeURIComponent(JSON.stringify(
+          {
+            url: `/fid/${img.fid}`
+          }))
+      }
       else if (OmniResourceWrapper.isAudio(img))
       {
         this.viewerExtension = '/extensions/omni-extension-plyr/?q='+encodeURIComponent(JSON.stringify({sources:[img]}))
       }
+
+
+
     },
 
     async focusObject(img) {

@@ -3180,6 +3180,8 @@ var createGallery = function(imagesPerPage, imageApi) {
         return "/json.png";
       } else if (file?.mimeType?.startsWith("application/pdf")) {
         return "/pdf.png";
+      } else if (file?.mimeType?.startsWith("text/")) {
+        return "/document.png";
       } else if (file?.mimeType?.startsWith("image/")) {
         if (opts && (opts.width || opts.height)) {
           let url = file.url;
@@ -3317,6 +3319,12 @@ var createGallery = function(imagesPerPage, imageApi) {
     async enterViewerMode(img) {
       if (img.mimeType === "application/pdf") {
         this.viewerExtension = "/extensions/omni-core-viewers/pdf.html?file=" + encodeURIComponent(`/fid/${img.fid}`);
+      } else if (img.mimeType === "text/markdown" || img.mimeType === "text/plain") {
+        this.viewerExtension = "/extensions/omni-core-viewers/markdown.html?q=" + encodeURIComponent(JSON.stringify(
+          {
+            url: `/fid/${img.fid}`
+          }
+        ));
       } else if (OmniResourceWrapper.isAudio(img)) {
         this.viewerExtension = "/extensions/omni-extension-plyr/?q=" + encodeURIComponent(JSON.stringify({ sources: [img] }));
       }
