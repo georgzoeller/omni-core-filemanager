@@ -97,6 +97,11 @@ class OmniResourceWrapper
     return obj && !OmniResourceWrapper.isPlaceholder(obj) &&  obj?.mimeType?.startsWith('image/')
   }
 
+  static isDocument(obj:any)
+  {
+    return obj && !OmniResourceWrapper.isPlaceholder(obj) &&  (obj?.mimeType?.startsWith('text/') || obj?.mimeType?.startsWith('application/pdf'))
+  }
+
 
 }
 
@@ -503,7 +508,6 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
     },
 
     async sendToChat(img) {
-
       let type
       if (OmniResourceWrapper.isAudio(img))
       {
@@ -513,9 +517,10 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       {
         type = 'images'
       }
-      else if (img.mimeType === 'application/pdf')
+      else if (OmniResourceWrapper.isDocument(img))
       {
         type = 'documents'
+
       }
       if (type)
       {

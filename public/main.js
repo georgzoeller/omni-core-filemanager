@@ -3052,6 +3052,9 @@ var OmniResourceWrapper = class _OmniResourceWrapper {
   static isImage(obj) {
     return obj && !_OmniResourceWrapper.isPlaceholder(obj) && obj?.mimeType?.startsWith("image/");
   }
+  static isDocument(obj) {
+    return obj && !_OmniResourceWrapper.isPlaceholder(obj) && (obj?.mimeType?.startsWith("text/") || obj?.mimeType?.startsWith("application/pdf"));
+  }
 };
 var windowListener;
 var closeListener;
@@ -3358,7 +3361,7 @@ var createGallery = function(imagesPerPage, imageApi) {
         type = "audio";
       } else if (OmniResourceWrapper.isImage(img)) {
         type = "images";
-      } else if (img.mimeType === "application/pdf") {
+      } else if (OmniResourceWrapper.isDocument(img)) {
         type = "documents";
       }
       if (type) {
