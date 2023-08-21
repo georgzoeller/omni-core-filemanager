@@ -321,7 +321,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       documents.map(doc =>
       {
            //@ts-ignore
-        window.parent?.client.runScript('add', ["omnitool.input_static_document", {doc: 'fid://' + img.fid, preview: [JSON.parse(JSON.stringify(doc))]}] )
+        window.parent?.client.runScript('add', ["omnitool.input_static_document", {doc: 'fid://' + doc.fid, preview: [JSON.parse(JSON.stringify(doc))]}] )
       })
 
     },

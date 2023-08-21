@@ -3029,8 +3029,8 @@ var copyToClipboardComponent = () => {
   return {
     copyText: "",
     copyNotification: false,
-    async copyToClipboard(img2) {
-      const res = await fetch("/fid/" + img2.ticket.fid || img2.fid);
+    async copyToClipboard(img) {
+      const res = await fetch("/fid/" + img.ticket.fid || img.fid);
       const blob = await res.blob();
       const data2 = [new ClipboardItem({ [blob.type]: blob })];
       await navigator.clipboard.write(data2);
@@ -3213,13 +3213,13 @@ var createGallery = function(imagesPerPage, imageApi) {
       if (!Array.isArray(objs)) {
         objs = [objs];
       }
-      let images = objs.filter((img2) => OmniResourceWrapper.isImage(img2));
-      images.map((img2) => {
-        window.parent?.client.runScript("add", ["omnitool.input_static_image", { img: "fid://" + img2.fid, preview: [JSON.parse(JSON.stringify(img2))] }]);
+      let images = objs.filter((img) => OmniResourceWrapper.isImage(img));
+      images.map((img) => {
+        window.parent?.client.runScript("add", ["omnitool.input_static_image", { img: "fid://" + img.fid, preview: [JSON.parse(JSON.stringify(img))] }]);
       });
       let documents = objs.filter((obj) => OmniResourceWrapper.isDocument(obj));
       documents.map((doc) => {
-        window.parent?.client.runScript("add", ["omnitool.input_static_document", { doc: "fid://" + img.fid, preview: [JSON.parse(JSON.stringify(doc))] }]);
+        window.parent?.client.runScript("add", ["omnitool.input_static_document", { doc: "fid://" + doc.fid, preview: [JSON.parse(JSON.stringify(doc))] }]);
       });
     },
     async addItems(images, replace = false) {
@@ -3268,15 +3268,15 @@ var createGallery = function(imagesPerPage, imageApi) {
       const data2 = await runExtensionScript("files", body);
       this.addItems(data2.images, opts?.replace);
     },
-    selectObject(img2) {
-      if (img2.onclick) {
+    selectObject(img) {
+      if (img.onclick) {
         return;
       }
-      const idx = this.multiSelectedObjects.indexOf(img2);
+      const idx = this.multiSelectedObjects.indexOf(img);
       if (idx > -1) {
         this.multiSelectedObjects.splice(idx, 1);
       } else {
-        this.multiSelectedObjects.push(img2);
+        this.multiSelectedObjects.push(img);
       }
     },
     paginate() {
@@ -3323,76 +3323,76 @@ var createGallery = function(imagesPerPage, imageApi) {
         }
       }
     },
-    async enterViewerMode(img2) {
-      if (img2.mimeType === "application/pdf") {
-        this.viewerExtension = "/extensions/omni-core-viewers/pdf.html?file=" + encodeURIComponent(`/fid/${img2.fid}`);
-      } else if (img2.mimeType === "text/markdown" || img2.mimeType === "text/plain") {
+    async enterViewerMode(img) {
+      if (img.mimeType === "application/pdf") {
+        this.viewerExtension = "/extensions/omni-core-viewers/pdf.html?file=" + encodeURIComponent(`/fid/${img.fid}`);
+      } else if (img.mimeType === "text/markdown" || img.mimeType === "text/plain") {
         this.viewerExtension = "/extensions/omni-core-viewers/markdown.html?q=" + encodeURIComponent(JSON.stringify(
           {
-            url: `/fid/${img2.fid}`
+            url: `/fid/${img.fid}`
           }
         ));
-      } else if (OmniResourceWrapper.isAudio(img2)) {
-        this.viewerExtension = "/extensions/omni-extension-plyr/?q=" + encodeURIComponent(JSON.stringify({ sources: [img2] }));
+      } else if (OmniResourceWrapper.isAudio(img)) {
+        this.viewerExtension = "/extensions/omni-extension-plyr/?q=" + encodeURIComponent(JSON.stringify({ sources: [img] }));
       }
     },
-    async focusObject(img2) {
-      if (img2 == null) {
+    async focusObject(img) {
+      if (img == null) {
         this.viewerExtension = null;
         this.focusedObject = null;
         return;
       }
-      this.enterViewerMode(img2);
+      this.enterViewerMode(img);
       this.animateTransition();
       this.x = 0;
       this.y = 0;
       this.scale = 1;
-      if (img2.onclick != null) {
-        await img2.onclick.call(img2);
+      if (img.onclick != null) {
+        await img.onclick.call(img);
         return;
       }
-      this.focusedObject = img2;
-      console.log("focusObject", img2);
+      this.focusedObject = img;
+      console.log("focusObject", img);
     },
     previousPage() {
       if (this.currentPage > 1) {
         this.currentPage -= 1;
       }
     },
-    async sendToChat(img2) {
+    async sendToChat(img) {
       let type;
-      if (OmniResourceWrapper.isAudio(img2)) {
+      if (OmniResourceWrapper.isAudio(img)) {
         type = "audio";
-      } else if (OmniResourceWrapper.isImage(img2)) {
+      } else if (OmniResourceWrapper.isImage(img)) {
         type = "images";
-      } else if (OmniResourceWrapper.isDocument(img2)) {
+      } else if (OmniResourceWrapper.isDocument(img)) {
         type = "documents";
       }
       if (type) {
-        if (Array.isArray(img2)) {
+        if (Array.isArray(img)) {
           let obj = {};
-          obj[type] = img2;
+          obj[type] = img;
           window.parent.client.sendSystemMessage(``, "text/markdown", {
             ...obj,
             commands: [
-              { "id": "run", title: "\u{1F782} Run", args: [null, img2] }
+              { "id": "run", title: "\u{1F782} Run", args: [null, img] }
             ]
           }, ["no-picture"]);
           this.multiSelectedObjects = [];
         } else {
           let obj = {};
-          obj[type] = [{ ...img2 }];
+          obj[type] = [{ ...img }];
           window.parent.client.sendSystemMessage(``, "text/markdown", {
             ...obj,
             commands: [
-              { "id": "run", title: "\u{1F782} Run", args: [null, { ...img2 }] }
+              { "id": "run", title: "\u{1F782} Run", args: [null, { ...img }] }
             ]
           }, ["no-picture"]);
         }
       }
     },
-    async exportObject(img2) {
-      const imageFid = img2;
+    async exportObject(img) {
+      const imageFid = img;
       const action = "export";
       let args2 = {};
       const workflow = await window.parent.client.workbench.toJSON();
@@ -3404,10 +3404,10 @@ var createGallery = function(imagesPerPage, imageApi) {
       await downloadObject(resultObject);
       await this.fetchObjects({ replace: true, limit: imagesPerPage });
     },
-    async importObject(img2) {
+    async importObject(img) {
       let args2 = {
         action: "import",
-        imageFid: img2.fid
+        imageFid: img.fid
       };
       const file = (await runExtensionScript("export", args2)).file;
       console.log("import", file);
@@ -3421,28 +3421,28 @@ var createGallery = function(imagesPerPage, imageApi) {
       this.scale = newScale;
       this.$refs.zoomImg.style.transform = `scale(${newScale})`;
     },
-    async deleteByFid(img2) {
-      console.log("delete", img2);
-      if (!Array.isArray(img2)) {
-        img2 = [img2];
+    async deleteByFid(img) {
+      console.log("delete", img);
+      if (!Array.isArray(img)) {
+        img = [img];
       }
-      if (img2.length > 1) {
-        if (!confirm(`Are you sure you want to delete ${img2.length} items?`)) {
+      if (img.length > 1) {
+        if (!confirm(`Are you sure you want to delete ${img.length} items?`)) {
           return;
         }
       }
-      let data2 = await runExtensionScript("delete", { delete: img2 });
+      let data2 = await runExtensionScript("delete", { delete: img });
       if (!data2.ok) {
         window.parent.client.sendSystemMessage("Failed to delete image(s) " + data2.reason, "text/plain", {}, ["error"]);
         return;
       }
       this.multiSelectedObjects = [];
       if (data2.deleted) {
-        this.images = this.images.filter((img3) => {
-          console.log(img3);
-          if (img3.onclick != null)
+        this.images = this.images.filter((img2) => {
+          console.log(img2);
+          if (img2.onclick != null)
             return true;
-          let deleted = data2.deleted.includes(img3.fid);
+          let deleted = data2.deleted.includes(img2.fid);
           return !deleted;
         });
         if (this.focusedObject) {
