@@ -3360,35 +3360,45 @@ var createGallery = function(imagesPerPage, imageApi) {
       }
     },
     async sendToChat(img) {
-      let type;
-      if (OmniResourceWrapper.isAudio(img)) {
-        type = "audio";
-      } else if (OmniResourceWrapper.isImage(img)) {
-        type = "images";
-      } else if (OmniResourceWrapper.isDocument(img)) {
-        type = "documents";
-      }
-      if (type) {
-        if (Array.isArray(img)) {
-          let obj = {};
-          obj[type] = img;
-          window.parent.client.sendSystemMessage(``, "text/markdown", {
-            ...obj,
-            commands: [
-              { "id": "run", title: "\u{1F782} Run", args: [null, img] }
-            ]
-          }, ["no-picture"]);
-          this.multiSelectedObjects = [];
-        } else {
-          let obj = {};
-          obj[type] = [{ ...img }];
-          window.parent.client.sendSystemMessage(``, "text/markdown", {
-            ...obj,
-            commands: [
-              { "id": "run", title: "\u{1F782} Run", args: [null, { ...img }] }
-            ]
-          }, ["no-picture"]);
+      if (Array.isArray(img)) {
+        let obj = {};
+        debugger;
+        img.forEach((o) => {
+          let type;
+          if (OmniResourceWrapper.isAudio(o)) {
+            type = "audio";
+          } else if (OmniResourceWrapper.isImage(o)) {
+            type = "images";
+          } else if (OmniResourceWrapper.isDocument(o)) {
+            type = "documents";
+          }
+          obj[type] ?? (obj[type] = []);
+          obj[type].push(o);
+        });
+        window.parent.client.sendSystemMessage(``, "text/markdown", {
+          ...obj,
+          commands: [
+            { "id": "run", title: "\u{1F782} Run", args: [null, img] }
+          ]
+        }, ["no-picture"]);
+        this.multiSelectedObjects = [];
+      } else {
+        let type;
+        if (OmniResourceWrapper.isAudio(img)) {
+          type = "audio";
+        } else if (OmniResourceWrapper.isImage(img)) {
+          type = "images";
+        } else if (OmniResourceWrapper.isDocument(img)) {
+          type = "documents";
         }
+        let obj = {};
+        obj[type] = [{ ...img }];
+        window.parent.client.sendSystemMessage(``, "text/markdown", {
+          ...obj,
+          commands: [
+            { "id": "run", title: "\u{1F782} Run", args: [null, { ...img }] }
+          ]
+        }, ["no-picture"]);
       }
     },
     async exportObject(img) {

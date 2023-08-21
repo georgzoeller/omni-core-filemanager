@@ -516,27 +516,33 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
     },
 
     async sendToChat(img) {
-      let type
-      if (OmniResourceWrapper.isAudio(img))
-      {
-        type = 'audio'
-      }
-      else if (OmniResourceWrapper.isImage(img))
-      {
-        type = 'images'
-      }
-      else if (OmniResourceWrapper.isDocument(img))
-      {
-        type = 'documents'
 
-      }
-      if (type)
-      {
+
 
         if (Array.isArray(img)) {
 
           let obj = {}
-          obj[type] = img
+
+          img.forEach(o => {
+
+            let type
+            if (OmniResourceWrapper.isAudio(o))
+            {
+              type='audio'
+            }
+            else if (OmniResourceWrapper.isImage(o))
+            {
+              type = 'images'
+            }
+            else if (OmniResourceWrapper.isDocument(o))
+            {
+              type = 'documents'
+            }
+              obj[type] ??=[]
+              obj[type].push(o)
+          })
+
+
           //@ts-expect-error
           window.parent.client.sendSystemMessage(``, 'text/markdown', {
             ...obj, commands: [
@@ -546,6 +552,21 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         }
         else {
 
+        let type
+
+        if (OmniResourceWrapper.isAudio(img))
+        {
+          type = 'audio'
+        }
+        else if (OmniResourceWrapper.isImage(img))
+        {
+          type = 'images'
+        }
+        else if (OmniResourceWrapper.isDocument(img))
+        {
+          type = 'documents'
+
+        }
           let obj = {}
           obj[type] =  [{ ...img }]
 
@@ -555,7 +576,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
               { 'id': 'run', title: '🞂 Run', args: [null, { ...img }] }]
           }, ['no-picture'])
         }
-      }
+
 
     },
     async exportObject(img) {
