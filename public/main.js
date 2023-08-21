@@ -3029,8 +3029,8 @@ var copyToClipboardComponent = () => {
   return {
     copyText: "",
     copyNotification: false,
-    async copyToClipboard(img) {
-      const res = await fetch("/fid/" + img.ticket.fid || img.fid);
+    async copyToClipboard(img2) {
+      const res = await fetch("/fid/" + img2.ticket.fid || img2.fid);
       const blob = await res.blob();
       const data2 = [new ClipboardItem({ [blob.type]: blob })];
       await navigator.clipboard.write(data2);
@@ -3206,16 +3206,20 @@ var createGallery = function(imagesPerPage, imageApi) {
         return "/ph_250.png";
       }
     },
-    async addToCanvas(images) {
-      if (!images) {
+    async addToCanvas(objs) {
+      if (!objs) {
         return;
       }
-      if (!Array.isArray(images)) {
-        images = [images];
+      if (!Array.isArray(objs)) {
+        objs = [objs];
       }
-      images = images.filter((img) => OmniResourceWrapper.isImage(img));
-      images.map((img) => {
-        window.parent?.client.runScript("add", ["omnitool.input_image_url", { img: "fid://" + img.fid, preview: [JSON.parse(JSON.stringify(img))] }]);
+      let images = objs.filter((img2) => OmniResourceWrapper.isImage(img2));
+      images.map((img2) => {
+        window.parent?.client.runScript("add", ["omnitool.input_static_image", { img: "fid://" + img2.furl, preview: [JSON.parse(JSON.stringify(img2))] }]);
+      });
+      let documents = objs.filter((obj) => OmniResourceWrapper.isDocument(obj));
+      documents.map((doc) => {
+        window.parent?.client.runScript("add", ["omnitool.input_static_document", { doc: "fid://" + img.furl, preview: [JSON.parse(JSON.stringify(doc))] }]);
       });
     },
     async addItems(images, replace = false) {
@@ -3264,15 +3268,15 @@ var createGallery = function(imagesPerPage, imageApi) {
       const data2 = await runExtensionScript("files", body);
       this.addItems(data2.images, opts?.replace);
     },
-    selectObject(img) {
-      if (img.onclick) {
+    selectObject(img2) {
+      if (img2.onclick) {
         return;
       }
-      const idx = this.multiSelectedObjects.indexOf(img);
+      const idx = this.multiSelectedObjects.indexOf(img2);
       if (idx > -1) {
         this.multiSelectedObjects.splice(idx, 1);
       } else {
-        this.multiSelectedObjects.push(img);
+        this.multiSelectedObjects.push(img2);
       }
     },
     paginate() {
@@ -3319,76 +3323,76 @@ var createGallery = function(imagesPerPage, imageApi) {
         }
       }
     },
-    async enterViewerMode(img) {
-      if (img.mimeType === "application/pdf") {
-        this.viewerExtension = "/extensions/omni-core-viewers/pdf.html?file=" + encodeURIComponent(`/fid/${img.fid}`);
-      } else if (img.mimeType === "text/markdown" || img.mimeType === "text/plain") {
+    async enterViewerMode(img2) {
+      if (img2.mimeType === "application/pdf") {
+        this.viewerExtension = "/extensions/omni-core-viewers/pdf.html?file=" + encodeURIComponent(`/fid/${img2.fid}`);
+      } else if (img2.mimeType === "text/markdown" || img2.mimeType === "text/plain") {
         this.viewerExtension = "/extensions/omni-core-viewers/markdown.html?q=" + encodeURIComponent(JSON.stringify(
           {
-            url: `/fid/${img.fid}`
+            url: `/fid/${img2.fid}`
           }
         ));
-      } else if (OmniResourceWrapper.isAudio(img)) {
-        this.viewerExtension = "/extensions/omni-extension-plyr/?q=" + encodeURIComponent(JSON.stringify({ sources: [img] }));
+      } else if (OmniResourceWrapper.isAudio(img2)) {
+        this.viewerExtension = "/extensions/omni-extension-plyr/?q=" + encodeURIComponent(JSON.stringify({ sources: [img2] }));
       }
     },
-    async focusObject(img) {
-      if (img == null) {
+    async focusObject(img2) {
+      if (img2 == null) {
         this.viewerExtension = null;
         this.focusedObject = null;
         return;
       }
-      this.enterViewerMode(img);
+      this.enterViewerMode(img2);
       this.animateTransition();
       this.x = 0;
       this.y = 0;
       this.scale = 1;
-      if (img.onclick != null) {
-        await img.onclick.call(img);
+      if (img2.onclick != null) {
+        await img2.onclick.call(img2);
         return;
       }
-      this.focusedObject = img;
-      console.log("focusObject", img);
+      this.focusedObject = img2;
+      console.log("focusObject", img2);
     },
     previousPage() {
       if (this.currentPage > 1) {
         this.currentPage -= 1;
       }
     },
-    async sendToChat(img) {
+    async sendToChat(img2) {
       let type;
-      if (OmniResourceWrapper.isAudio(img)) {
+      if (OmniResourceWrapper.isAudio(img2)) {
         type = "audio";
-      } else if (OmniResourceWrapper.isImage(img)) {
+      } else if (OmniResourceWrapper.isImage(img2)) {
         type = "images";
-      } else if (OmniResourceWrapper.isDocument(img)) {
+      } else if (OmniResourceWrapper.isDocument(img2)) {
         type = "documents";
       }
       if (type) {
-        if (Array.isArray(img)) {
+        if (Array.isArray(img2)) {
           let obj = {};
-          obj[type] = img;
+          obj[type] = img2;
           window.parent.client.sendSystemMessage(``, "text/markdown", {
             ...obj,
             commands: [
-              { "id": "run", title: "\u{1F782} Run", args: [null, img] }
+              { "id": "run", title: "\u{1F782} Run", args: [null, img2] }
             ]
           }, ["no-picture"]);
           this.multiSelectedObjects = [];
         } else {
           let obj = {};
-          obj[type] = [{ ...img }];
+          obj[type] = [{ ...img2 }];
           window.parent.client.sendSystemMessage(``, "text/markdown", {
             ...obj,
             commands: [
-              { "id": "run", title: "\u{1F782} Run", args: [null, { ...img }] }
+              { "id": "run", title: "\u{1F782} Run", args: [null, { ...img2 }] }
             ]
           }, ["no-picture"]);
         }
       }
     },
-    async exportObject(img) {
-      const imageFid = img;
+    async exportObject(img2) {
+      const imageFid = img2;
       const action = "export";
       let args2 = {};
       const workflow = await window.parent.client.workbench.toJSON();
@@ -3400,10 +3404,10 @@ var createGallery = function(imagesPerPage, imageApi) {
       await downloadObject(resultObject);
       await this.fetchObjects({ replace: true, limit: imagesPerPage });
     },
-    async importObject(img) {
+    async importObject(img2) {
       let args2 = {
         action: "import",
-        imageFid: img.fid
+        imageFid: img2.fid
       };
       const file = (await runExtensionScript("export", args2)).file;
       console.log("import", file);
@@ -3417,28 +3421,28 @@ var createGallery = function(imagesPerPage, imageApi) {
       this.scale = newScale;
       this.$refs.zoomImg.style.transform = `scale(${newScale})`;
     },
-    async deleteByFid(img) {
-      console.log("delete", img);
-      if (!Array.isArray(img)) {
-        img = [img];
+    async deleteByFid(img2) {
+      console.log("delete", img2);
+      if (!Array.isArray(img2)) {
+        img2 = [img2];
       }
-      if (img.length > 1) {
-        if (!confirm(`Are you sure you want to delete ${img.length} items?`)) {
+      if (img2.length > 1) {
+        if (!confirm(`Are you sure you want to delete ${img2.length} items?`)) {
           return;
         }
       }
-      let data2 = await runExtensionScript("delete", { delete: img });
+      let data2 = await runExtensionScript("delete", { delete: img2 });
       if (!data2.ok) {
         window.parent.client.sendSystemMessage("Failed to delete image(s) " + data2.reason, "text/plain", {}, ["error"]);
         return;
       }
       this.multiSelectedObjects = [];
       if (data2.deleted) {
-        this.images = this.images.filter((img2) => {
-          console.log(img2);
-          if (img2.onclick != null)
+        this.images = this.images.filter((img3) => {
+          console.log(img3);
+          if (img3.onclick != null)
             return true;
-          let deleted = data2.deleted.includes(img2.fid);
+          let deleted = data2.deleted.includes(img3.fid);
           return !deleted;
         });
         if (this.focusedObject) {

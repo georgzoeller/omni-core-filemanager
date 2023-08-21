@@ -299,23 +299,31 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       }
     },
 
-    async addToCanvas(images) {
+    async addToCanvas(objs) {
 
-      if (!images)
+      if (!objs)
       {
         return
       }
 
-      if (!Array.isArray(images))
+      if (!Array.isArray(objs))
       {
-        images = [images]
+        objs= [objs]
       }
 
-      images = images.filter(img=>OmniResourceWrapper.isImage(img))
+      let images = objs.filter(img=>OmniResourceWrapper.isImage(img))
       images.map(img => {
         //@ts-ignore
-        window.parent?.client.runScript('add', ["omnitool.input_image_url", {img: 'fid://' + img.fid, preview: [JSON.parse(JSON.stringify(img))]}] )
+        window.parent?.client.runScript('add', ["omnitool.input_static_image", {img: 'fid://' + img.furl, preview: [JSON.parse(JSON.stringify(img))]}] )
       })
+
+      let documents = objs.filter(obj=>OmniResourceWrapper.isDocument(obj))
+      documents.map(doc =>
+      {
+           //@ts-ignore
+        window.parent?.client.runScript('add', ["omnitool.input_static_document", {doc: 'fid://' + img.furl, preview: [JSON.parse(JSON.stringify(doc))]}] )
+      })
+
     },
 
 
