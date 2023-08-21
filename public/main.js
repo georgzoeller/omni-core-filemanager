@@ -3215,11 +3215,11 @@ var createGallery = function(imagesPerPage, imageApi) {
       }
       let images = objs.filter((img2) => OmniResourceWrapper.isImage(img2));
       images.map((img2) => {
-        window.parent?.client.runScript("add", ["omnitool.input_static_image", { img: "fid://" + img2.furl, preview: [JSON.parse(JSON.stringify(img2))] }]);
+        window.parent?.client.runScript("add", ["omnitool.input_static_image", { img: "fid://" + img2.fid, preview: [JSON.parse(JSON.stringify(img2))] }]);
       });
       let documents = objs.filter((obj) => OmniResourceWrapper.isDocument(obj));
       documents.map((doc) => {
-        window.parent?.client.runScript("add", ["omnitool.input_static_document", { doc: "fid://" + img.furl, preview: [JSON.parse(JSON.stringify(doc))] }]);
+        window.parent?.client.runScript("add", ["omnitool.input_static_document", { doc: "fid://" + img.fid, preview: [JSON.parse(JSON.stringify(doc))] }]);
       });
     },
     async addItems(images, replace = false) {
