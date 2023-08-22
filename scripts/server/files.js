@@ -9,7 +9,7 @@ const script = {
 
     let tags = 'user.' + ctx.user.id
     let images =  ctx.app.cdn.kvStorage.getAny('file.',undefined,{limit,cursor, tags},).map((file) => {
-      console.log(file)
+
       if (file.value.fid)
       {
         file.value.url = '/fid/' + file.value.fid
