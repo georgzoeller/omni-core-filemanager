@@ -5,7 +5,11 @@ import { promisify } from 'util';
 
 const LSB_COUNT = 2
 const COMPRESS = true
+
 async function encodeJSONToImage(inputImage, jsonData, n = LSB_COUNT, compress = COMPRESS) {
+  const MAGIC_HEADER = Buffer.from('OMNI'); // 4-byte magic header
+  const VERSION = Buffer.from([1]); // 1-byte version number
+
   try {
     console.log("encoding...")
     let binaryJson;
@@ -19,7 +23,7 @@ async function encodeJSONToImage(inputImage, jsonData, n = LSB_COUNT, compress =
 
     const binaryJsonLengthBuffer = Buffer.alloc(4);
     binaryJsonLengthBuffer.writeUInt32BE(binaryJson.length);
-    binaryJson = Buffer.concat([binaryJsonLengthBuffer, binaryJson]); // Adding binaryJson length to the start of the buffer
+    binaryJson = Buffer.concat([MAGIC_HEADER, VERSION, binaryJsonLengthBuffer, binaryJson]);
 
     // Changes start here
     // Each pixel uses 4 channels, so we need to calculate required pixels accordingly.
@@ -36,7 +40,7 @@ async function encodeJSONToImage(inputImage, jsonData, n = LSB_COUNT, compress =
 
     let metadata = await sharp(resizedImage).metadata();
 
-    let title = (jsonData.recipe?.activeWorkflow?.meta?.name || "Omnitool Recipe").subst(0,23)
+    let title = (jsonData.recipe?.activeWorkflow?.meta?.name || "Omnitool Recipe").substring(0,23)
 
     const overlay = `<svg width="${metadata.width}" height="${metadata.height}">
     <rect x="0" y="0" width="100%" height="15%" fill="white" />
@@ -80,6 +84,9 @@ async function encodeJSONToImage(inputImage, jsonData, n = LSB_COUNT, compress =
       },
     })
     .png({ compressionLevel: 9, adaptiveFiltering: false, force: true })
+    .withMetadata({
+      description: binaryJson.toString('base64')  // Store as base64 to ensure it's string-friendly
+    })
     .toBuffer();
   } catch (error) {
     console.error(error);
@@ -89,6 +96,8 @@ async function encodeJSONToImage(inputImage, jsonData, n = LSB_COUNT, compress =
 
 async function decodeImageToJSON(inputImage, n = LSB_COUNT, compress = COMPRESS) {
   try {
+
+
     console.log("decoding...");
 
     const rawImage = await sharp(inputImage)
@@ -98,6 +107,7 @@ async function decodeImageToJSON(inputImage, n = LSB_COUNT, compress = COMPRESS)
     // Changes start here
     // Calculate the binaryJson length according to the number of channels
     let binaryJson = Buffer.alloc(rawImage.length / 4 * n);
+
 
     for (let i = 0; i < binaryJson.length; i++) {
       let byte = 0;
@@ -111,6 +121,16 @@ async function decodeImageToJSON(inputImage, n = LSB_COUNT, compress = COMPRESS)
       binaryJson[i] = byte;
     }
     // Changes end here
+    const MAGIC_HEADER = Buffer.from('OMNI'); // 4-byte magic header
+
+    if (binaryJson.slice(0, 4).toString() !== MAGIC_HEADER.toString()) {
+      throw new Error('Invalid magic header in image.'+ binaryJson.slice(0, 4).toString());
+    }
+
+    const version = binaryJson.readUInt8(4);
+    console.log("Detected version:", version);
+    binaryJson = binaryJson.slice(5);
+
 
     const binaryJsonLength = binaryJson.readUInt32BE(0);
     binaryJson = binaryJson.slice(4, 4 + binaryJsonLength);
@@ -125,7 +145,17 @@ async function decodeImageToJSON(inputImage, n = LSB_COUNT, compress = COMPRESS)
 
     return JSON.parse(jsonStr);
   } catch (error) {
-    console.error(error);
+    try {
+      const metadata = await sharp(inputImage).metadata();
+      if (metadata.description) {
+        const compressedData = Buffer.from(metadata.description, 'base64');
+        const gunzipPromise = promisify(zlib.gunzip);
+        const jsonStr = await gunzipPromise(compressedData);
+        return JSON.parse(jsonStr);
+      }
+    } catch (metadataError) {
+      console.error("Error reading backup from metadata:", metadataError);
+    }
     return null;
   }
 }
