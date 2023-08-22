@@ -9,7 +9,7 @@ async function encodeJSONToImage(inputImage, jsonData, n = LSB_COUNT, compress =
   try {
     console.log("encoding...")
     let binaryJson;
-
+    console.log("Data", JSON.stringify(jsonData.recipe?.activeWorkflow?.meta, null, 2))
     if (compress) {
       const gzipPromise = promisify(zlib.gzip);
       binaryJson = await gzipPromise(JSON.stringify(jsonData));
@@ -36,11 +36,13 @@ async function encodeJSONToImage(inputImage, jsonData, n = LSB_COUNT, compress =
 
     let metadata = await sharp(resizedImage).metadata();
 
+    let title = (jsonData.recipe?.activeWorkflow?.meta?.name || "Omnitool Recipe").subst(0,23)
+
     const overlay = `<svg width="${metadata.width}" height="${metadata.height}">
     <rect x="0" y="0" width="100%" height="15%" fill="white" />
-    <text x="50.4%" y="8.4%" font-family="sans-serif" fill="gray" stroke="gray" strokeWidth="2" dominant-baseline="middle" font-size="25" text-anchor="middle">Omnitool Recipe</text>
-    <text x="50%" y="8%" font-family="sans-serif" fill="black" stroke="black" strokeWidth="3" dominant-baseline="middle" font-size="25" text-anchor="middle">Omnitool Recipe</text>
-    <text x="50%" y="12%" font-family="sans-serif" fill="black" stroke="black" strokeWidth="2" dominant-baseline="middle" font-size="12" text-anchor="middle">Load me with omnitool.</text>
+    <text x="50.4%" y="8.4%" font-family="sans-serif" fill="gray" stroke="gray" strokeWidth="2" dominant-baseline="middle" font-size="25" text-anchor="middle">${title}</text>
+    <text x="50%" y="8%" font-family="sans-serif" fill="black" stroke="black" strokeWidth="3" dominant-baseline="middle" font-size="25" text-anchor="middle">${title}</text>
+    <text x="50%" y="12%" font-family="sans-serif" fill="black" stroke="black" strokeWidth="2" dominant-baseline="middle" font-size="12" text-anchor="middle">Load me with omnitool.ai</text>
     </svg>`
 
 
