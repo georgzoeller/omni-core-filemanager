@@ -46,7 +46,8 @@ async function encodeJSONToImage(inputImage, jsonData, n = LSB_COUNT, compress =
     <rect x="0" y="0" width="100%" height="15%" fill="white" />
     <text x="50.4%" y="8.4%" font-family="sans-serif" fill="gray" stroke="gray" strokeWidth="2" dominant-baseline="middle" font-size="25" text-anchor="middle">${title}</text>
     <text x="50%" y="8%" font-family="sans-serif" fill="black" stroke="black" strokeWidth="3" dominant-baseline="middle" font-size="25" text-anchor="middle">${title}</text>
-    <text x="50%" y="12%" font-family="sans-serif" fill="black" stroke="black" strokeWidth="2" dominant-baseline="middle" font-size="12" text-anchor="middle">Load me with omnitool.ai</text>
+    <text x="72.4%" y="98.4%" font-family="sans-serif" fill="grey" stroke="grey" strokeWidth="2" dominant-baseline="middle" font-size="16" text-anchor="right">omnitool.ai</text>
+    <text x="72%" y="98%" font-family="sans-serif" fill="yellow" stroke="yellow" strokeWidth="1" dominant-baseline="middle" font-size="16" text-anchor="right">omnitool.ai</text>
     </svg>`
 
 
