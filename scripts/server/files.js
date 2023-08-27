@@ -8,7 +8,7 @@ const script = {
 
 
     let tags = 'user.' + ctx.user.id
-    let images =  ctx.app.cdn.kvStorage.getAny('file.',undefined,{limit,cursor, tags},).map((file) => {
+    let images =  ctx.app.cdn.kvStorage.getAny('file.',undefined,{limit,cursor, tags}).map((file) => {
 
       if (file.value.fid)
       {

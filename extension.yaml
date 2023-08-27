@@ -9,4 +9,7 @@ client:
   singleton: true
   winbox:
     left: "50%"
-    max: true
+    height: 100%
+    width: 60%
+
+

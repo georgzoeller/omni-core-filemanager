@@ -3317,7 +3317,7 @@ var createGallery = function(imagesPerPage, imageApi) {
     async runViewerAction(obj, action) {
       if (OmniResourceWrapper.isImage(obj)) {
         if (action === "edit") {
-          this.viewerExtension = "/extensions/omni-extension-minipaint/?q=" + encodeURIComponent(JSON.stringify({ url: this.focusedObject?.url, filename: this.focusedObject?.fileName }));
+          window.parent.client.workbench.showExtension("omni-extension-minipaint", { url: this.focusedObject?.url, filename: this.focusedObject?.fileName }, void 0, { winbox: { title: "Edit Image" } });
           this.showInfo = false;
           return;
         }
@@ -3362,7 +3362,6 @@ var createGallery = function(imagesPerPage, imageApi) {
     async sendToChat(img) {
       if (Array.isArray(img)) {
         let obj = {};
-        debugger;
         img.forEach((o) => {
           let type;
           if (OmniResourceWrapper.isAudio(o)) {

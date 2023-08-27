@@ -453,7 +453,11 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       {
         if(action === 'edit')
         {
-          this.viewerExtension='/extensions/omni-extension-minipaint/?q='+encodeURIComponent(JSON.stringify({url: this.focusedObject?.url, filename: this.focusedObject?.fileName}));
+
+          //@ts-ignore
+          window.parent.client.workbench.showExtension('omni-extension-minipaint', {url: this.focusedObject?.url, filename: this.focusedObject?.fileName}, undefined, {winbox:{title: 'Edit Image'}})
+
+          //this.viewerExtension='/extensions/omni-extension-minipaint/?q='+encodeURIComponent(JSON.stringify({url: this.focusedObject?.url, filename: this.focusedObject?.fileName}));
 
           this.showInfo = false
           return
@@ -516,9 +520,6 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
     },
 
     async sendToChat(img) {
-
-
-
         if (Array.isArray(img)) {
 
           let obj = {}
