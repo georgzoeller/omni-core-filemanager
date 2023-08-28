@@ -3321,6 +3321,8 @@ var createGallery = function(imagesPerPage, imageApi) {
           this.showInfo = false;
           return;
         }
+      } else if (OmniResourceWrapper.isAudio) {
+        window.parent.client.workbench.showExtension("omni-extension-wavacity", { url: this.focusedObject?.url, filename: this.focusedObject?.fileName }, void 0, { winbox: { title: "Edit Audio" } });
       }
     },
     async enterViewerMode(img) {
