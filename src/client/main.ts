@@ -463,6 +463,11 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
           return
         }
       }
+      else if (OmniResourceWrapper.isAudio)
+      {
+        //@ts-ignore
+        window.parent.client.workbench.showExtension('omni-extension-wavacity', {url: this.focusedObject?.url, filename: this.focusedObject?.fileName}, undefined, {winbox:{title: 'Edit Audio'}})
+      }
     },
 
     async enterViewerMode(img)
