@@ -89,7 +89,7 @@ class OmniResourceWrapper
 
   static isAudio(obj:any)
   {
-    return obj && !OmniResourceWrapper.isPlaceholder(obj) && obj?.mimeType?.startsWith('audio/') || obj.mimeType == 'application/ogg'
+    return obj && !OmniResourceWrapper.isPlaceholder(obj) && obj?.mimeType?.startsWith('audio/') || obj?.mimeType == 'application/ogg'
   }
 
   static isImage(obj:any)
@@ -463,7 +463,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
           return
         }
       }
-      else if (OmniResourceWrapper.isAudio)
+      else if (OmniResourceWrapper.isAudio(obj))
       {
         //@ts-ignore
         window.parent.client.workbench.showExtension('omni-extension-wavacity', {url: this.focusedObject?.url, filename: this.focusedObject?.fileName}, undefined, {winbox:{title: 'Edit Audio'}})

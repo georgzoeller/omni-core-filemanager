@@ -3047,7 +3047,7 @@ var OmniResourceWrapper = class _OmniResourceWrapper {
     return obj?.onclick != null;
   }
   static isAudio(obj) {
-    return obj && !_OmniResourceWrapper.isPlaceholder(obj) && obj?.mimeType?.startsWith("audio/") || obj.mimeType == "application/ogg";
+    return obj && !_OmniResourceWrapper.isPlaceholder(obj) && obj?.mimeType?.startsWith("audio/") || obj?.mimeType == "application/ogg";
   }
   static isImage(obj) {
     return obj && !_OmniResourceWrapper.isPlaceholder(obj) && obj?.mimeType?.startsWith("image/");
@@ -3321,7 +3321,7 @@ var createGallery = function(imagesPerPage, imageApi) {
           this.showInfo = false;
           return;
         }
-      } else if (OmniResourceWrapper.isAudio) {
+      } else if (OmniResourceWrapper.isAudio(obj)) {
         window.parent.client.workbench.showExtension("omni-extension-wavacity", { url: this.focusedObject?.url, filename: this.focusedObject?.fileName }, void 0, { winbox: { title: "Edit Audio" } });
       }
     },
