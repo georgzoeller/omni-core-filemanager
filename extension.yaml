@@ -8,10 +8,9 @@ client:
   hideBackButton: true
   singleton: true
   winbox:
+    minwidth: 60%
+    minheight: 100%
     x: right
     y: top
-    height: 100%
-    width: 60%
-    max: true
 
 

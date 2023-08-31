@@ -1,5 +1,8 @@
 
 import Alpine from 'alpinejs'
+import {OmniSDKClient} from 'omni-sdk';
+
+const sdk = new OmniSDKClient("omni-core-filemanager").init();
 
 declare global {
   interface Window {
@@ -36,23 +39,6 @@ const downloadObject = function(image) {
           document.body.removeChild(link);
       })
       .catch(error => console.error(error));
-}
-
-
-
-const runExtensionScript = async (scriptName: string, payload: any) => {
-  const response = await fetch('/api/v1/mercenaries/runscript/omni-core-filemanager:' + scriptName,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    }
-  );
-  const data = await response.json();
-    console.log(scriptName, data)
-  return data
 }
 
 
@@ -326,6 +312,16 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
     },
 
+    canEdit(obj) {
+      return obj && sdk.canEditFile(Alpine.raw(obj))
+    },
+
+    canView(obj)
+    {
+      return obj && sdk.canViewFile(Alpine.raw(obj))
+    },
+
+
 
     async addItems(images, replace = false)
     {
@@ -382,7 +378,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       if(opts?.limit && typeof(opts.limit) === 'number' &&  opts.limit > 0) {
         body.limit = Math.max(opts.limit,2)
       }
-      const data = await runExtensionScript('files', body)
+      const data = await sdk.runExtensionScript('files', body)
 
       this.addItems(data.images, opts?.replace)
 
@@ -453,9 +449,11 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       {
         if(action === 'edit')
         {
+          // Signal the intent to edit the object, leaving the host to decide which editor to use
+          sdk.signalIntent('edit','', Alpine.raw(obj), {winbox:{title: 'Edit Image'}})
 
           //@ts-ignore
-          window.parent.client.workbench.showExtension('omni-extension-minipaint', {url: this.focusedObject?.url, filename: this.focusedObject?.fileName}, undefined, {winbox:{title: 'Edit Image'}})
+          //window.parent.client.workbench.showExtension('omni-extension-minipaint', {url: this.focusedObject?.url, filename: this.focusedObject?.fileName}, undefined, {winbox:{title: 'Edit Image'}})
 
           //this.viewerExtension='/extensions/omni-extension-minipaint/?q='+encodeURIComponent(JSON.stringify({url: this.focusedObject?.url, filename: this.focusedObject?.fileName}));
 
@@ -549,8 +547,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
           })
 
 
-          //@ts-expect-error
-          window.parent.client.sendSystemMessage(``, 'text/markdown', {
+          sdk.sendChatMessage(``, 'text/markdown', {
             ...obj, commands: [
               { 'id': 'run', title: '🞂 Run', args: [null, img] }]
           }, ['no-picture'])
@@ -576,8 +573,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
           let obj = {}
           obj[type] =  [{ ...img }]
 
-          //@ts-expect-error
-          window.parent.client.sendSystemMessage(``, 'text/markdown', {
+          sdk.sendChatMessage(``, 'text/markdown', {
             ...obj, commands: [
               { 'id': 'run', title: '🞂 Run', args: [null, { ...img }] }]
           }, ['no-picture'])
@@ -597,7 +593,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         alert('No active workflow')
       }
       const payload = { imageFid, action, args, recipe:workflow }
-      const resultObject = (<any>await runExtensionScript('export', payload)).image
+      const resultObject = (<any>await sdk.runExtensionScript('export', payload)).image
       await downloadObject(resultObject)
       await this.fetchObjects({replace:true, limit: imagesPerPage})
 
@@ -610,7 +606,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         action: 'import',
         imageFid: img.fid,
       }
-      const file = <any>(await runExtensionScript('export', args)).file
+      const file = <any>(await sdk.runExtensionScript('export', args)).file
       console.log('import', file)
       window.parent.location.href = window.parent.location.protocol + "//" + window.parent.location.host + `/?rx=${encodeURIComponent(file.url)}`;
 
@@ -644,11 +640,10 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         }
       }
 
-      let data = await runExtensionScript('delete', {delete: img})
+      let data = await sdk.runExtensionScript('delete', {delete: img})
 
       if (!data.ok) {
-        //@ts-expect-error
-        window.parent.client.sendSystemMessage('Failed to delete image(s) ' + data.reason, 'text/plain', {}, ['error'])
+        sdk.sendChatMessage('Failed to delete image(s) ' + data.reason, 'text/plain', {}, ['error'])
         return
       }
 
@@ -668,8 +663,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
             this.focusedObject = null
             // In viewer mode, we close the extension if the focused image is deleted
             if (this.viewerMode === true) {
-              //@ts-expect-error
-              window.parent.client.workbench.hideExtension()
+              sdk.close()
             }
           }
         }
