@@ -478,7 +478,10 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       {
         this.viewerExtension = '/extensions/omni-core-viewers/markdown.html?q='+encodeURIComponent(JSON.stringify(
           {
-            url: `/fid/${img.fid}`
+            file: {
+              fid: img.fid,
+              mimeType: img.mimeType
+            }
           }))
       }
       else if (OmniResourceWrapper.isAudio(img))
