@@ -33,7 +33,7 @@ const script = {
 
     await Promise.all(payload.delete.map(fid=> {
       console.log('softDelete')
-      ctx.app.cdn.softDelete(fid)
+      ctx.app.cdn.softDelete(fid, )
     }))
 
     return {
