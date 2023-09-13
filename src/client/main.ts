@@ -586,7 +586,6 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
     },
     async exportObject(img) {
-
       const imageFid = img
       const action = 'export'
       let args = {}
@@ -597,9 +596,17 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         alert('No active workflow')
       }
       const payload = { imageFid, action, args, recipe:workflow }
-      const resultObject = (<any>await sdk.runExtensionScript('export', payload)).image
-      await downloadObject(resultObject)
-      await this.fetchObjects({replace:true, limit: imagesPerPage})
+      const result = (<any>await sdk.runExtensionScript('export', payload))
+      if (result.ok) {
+        const resultObject = result.image
+        await downloadObject(resultObject)
+        await this.fetchObjects({replace:true, limit: imagesPerPage})
+      }
+      else
+      {
+        alert('Failed to export image: '+  result.reason)
+
+      }
 
 
     },

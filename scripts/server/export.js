@@ -1,5 +1,5 @@
 import sharp from 'sharp';
-
+import _ from 'lodash';
 import zlib from 'zlib';
 import { promisify } from 'util';
 
@@ -40,7 +40,7 @@ async function encodeJSONToImage(inputImage, jsonData, n = LSB_COUNT, compress =
 
     let metadata = await sharp(resizedImage).metadata();
 
-    let title = (jsonData.recipe?.activeWorkflow?.meta?.name || "Omnitool Recipe").substring(0,23)
+    let title = _.escape(jsonData.recipe?.activeWorkflow?.meta?.name || "Omnitool Recipe").substring(0,23)
 
     const overlay = `<svg width="${metadata.width}" height="${metadata.height}">
     <rect x="0" y="0" width="100%" height="15%" fill="white" />
@@ -166,35 +166,43 @@ const script = {
 
   exec: async function (ctx, payload) {
 
-    console.log('-------payload', payload)
+
 
     if (payload.action === 'export') {
 
-      let {imageFid, recipe, args} = payload
+      try
+      {
+        debugger;
+        let {imageFid, recipe, args} = payload
 
-      imageFid = imageFid.ticket.fid ? imageFid.ticket.fid : imageFid
+        imageFid = imageFid.ticket.fid ? imageFid.ticket.fid : imageFid
 
-      if (!imageFid) return {error: 'Image not provided'}
-      if (!recipe) return {error: 'Recipe not provided'}
-      if (!args) args = {}
+        if (!imageFid) return {error: 'Image not provided'}
+        if (!recipe) return {error: 'Recipe not provided'}
+        if (!args) args = {}
 
 
 
-      imageFid = {ticket: {fid: imageFid}}
+        imageFid = {ticket: {fid: imageFid}}
 
-      let image = await ctx.app.cdn.get(imageFid)
-      if(!image || !image.data) return {error: 'Image Fid not valid'}
+        let image = await ctx.app.cdn.get(imageFid)
+        if(!image || !image.data) return {error: 'Image Fid not valid'}
 
-      let result = await encodeJSONToImage(image, {recipe, args})
-      if (!result) return {error: 'Error encoding image'}
+        let result = await encodeJSONToImage(image, {recipe, args})
+        if (!result) return {error: 'Error encoding image'}
 
-      let resultImage = await ctx.app.cdn.putTemp(result,{}, {containsRecipe: true})
-      return { image: resultImage }
+        let resultImage = await ctx.app.cdn.putTemp(result,{}, {containsRecipe: true, userId: ctx.userId})
+        return { ok: true,  image: resultImage }
+      }
+      catch (ex)
+      {
+        return {ok: false, reason: ex.message}
+      }
 
     }
     else if (payload.action === 'import')
     {
-      console.log('-------payload', payload)
+
 
       let imageFid = payload.imageFid
       if (!imageFid) return {error: 'Image not provided'}
@@ -204,8 +212,12 @@ const script = {
 
       let result = (await decodeImageToJSON(image.data)).recipe.activeWorkflow
       if (!result) return {error: 'Error decoding image'}
+
+      delete result.id
+
       console.log(result)
-      let file = await ctx.app.cdn.putTemp(Buffer.from(JSON.stringify(result)),{}, {type: 'recipe'})
+      let file = await ctx.app.cdn.putTemp(Buffer.from(JSON.stringify(result)),{}, {userId: ctx.userId, type: 'recipe'})
+
       return {file}
     }
     else
