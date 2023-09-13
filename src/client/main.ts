@@ -310,6 +310,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         window.parent?.client.runScript('add', ["omnitool.input_static_document", {doc: 'fid://' + doc.fid, preview: [JSON.parse(JSON.stringify(doc))]}] )
       })
 
+
     },
 
     canEdit(obj) {
