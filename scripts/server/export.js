@@ -171,8 +171,7 @@ const script = {
     if (payload.action === 'export') {
 
       try
-      {
-        debugger;
+
         let {imageFid, recipe, args} = payload
 
         imageFid = imageFid.ticket.fid ? imageFid.ticket.fid : imageFid
