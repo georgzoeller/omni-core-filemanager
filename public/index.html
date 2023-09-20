@@ -83,6 +83,7 @@
       }
     }
 
+
     .divider {
       border-left: 1px solid rgb(161, 161, 171);
       height: 80%;
@@ -186,7 +187,11 @@
                       <img
                       @mouseenter="hoverItem = img"
                       @mouseleave="hoverItem = null"
-                      @contextmenu.prevent="selectObject(img)" @click="await focusObject(img)" :src="getDisplayUrl(img, {width: 256, height: 256, fit: 'contain'})" class="object-cover rounded-sm object-top" style="width: 256px; height: 256px; cursor: zoom-in" :class="{ 'border-4 border-yellow-300': multiSelectedObjects.includes(img), 'border-4 border-white': focusedObject === img }" alt="image.meta.fileName" />
+                      @contextmenu.prevent="selectObject(img)" @click="await focusObject(img)" :src="getDisplayUrl(img, {width: 256, height: 256, fit: 'contain'})" class="object-cover rounded-sm object-top" style="width: 256px; height: 256px; cursor: zoom-in" 
+                      :class="{ 'border-4 border-yellow-300': multiSelectedObjects.includes(img), 
+                      'border-4 border-white': focusedObject === img,
+                    
+                      }" alt="image.meta.fileName" />
 
                     </div>
 
@@ -307,16 +312,24 @@
             <iframe x-show="viewerExtension" :src="viewerExtension" style="width:100%; height: 100%;margin-top: 40px; margin-bottom: 40px;" @keyup.window.esc.stop.prevent="await focusObject(null)" >
 
             </iframe>
-            <img x-show="focusedObject && !viewerExtension" :src="getDisplayUrl(focusedObject)" :style="{ transform: `scale(${scale}) translate(${x}px, ${y}px)`}" class="object-contain transition-opacity duration-200" :class="{ 'opacity-0': loading }"
+
+            <div      :style="{ filter:  focusedObject?.meta?.nsfw?.isNsfw && !allowNSFW ? 'blur(20px)' : 'none'}"
+             class="w-full h-full"
+            >
+
+            <img x-show="focusedObject && !viewerExtension" :src="getDisplayUrl(focusedObject)" :style="{ transform: `scale(${scale}) translate(${x}px, ${y}px)`}" class="object-contain transition-opacity duration-200" 
+            :class="{ 'opacity-0': loading,
+            }"
             @wheel.prevent="zoomObject" @mousedown="startMoving" @mousemove="move" @mouseup="stopMoving" @mouseleave="stopMoving" x-ref="zoomImg"
             />
-
+          </div>
             <div  class="absolute bottom-0 left-0 w-full p-2 gap-5 z-10 font-semibold drop-shadow shadow-black bg-white bg-opacity-50 text-sm flex justify-between items-center h-8">
+              <span class="font-semibold cursor-pointer" style="width:10px; height:8px;" @click="allowNSFW = !allowNSFW" x-text="allowNSFW ? '👀' : '🔞'  "> </span>
               <span><span class="font-semibold"></span> <span x-text="focusedObject ? new Date(focusedObject.meta.created).toLocaleString(): ''"></span></span>
               <span><span class="font-semibold"></span> <span x-text="focusedObject?.mimeType?.startsWith('image/') ? focusedObject?.meta.width + 'x' + focusedObject?.meta.height + ' pixels' : ''"></span></span>
               <span><span class="font-semibold"></span><span class="drop-shadow-md" x-text="focusedObject?.mimeType"></span></span>
               <span><span class="font-semibold"></span><span class="drop-shadow-md" x-text="focusedObject?.expires ? '⏱ expires ' + (new Date(focusedObject.expires)).toLocaleString() : '' "></span></span>
-              <span><span class="font-semibold"></span><span class="drop-shadow-md" x-text="focusedObject?.fileName"></span></span>
+              <span><span class="font-semibold"></span><span class="drop-shadow-md" @click="prompt(focusedObject?.fid, JSON.stringify(focusedObject?.meta||{})) "  x-text="focusedObject?.fid"></span></span>
 
             </div>
             <div @click.stop="nextObject()" x-show="!viewerMode && !viewerExtension" class="w-10  h-full absolute top-0 right-0  flex items-center justify-center text-black text-4xl cursor-pointer">›</div>

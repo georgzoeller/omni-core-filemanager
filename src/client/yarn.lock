@@ -275,8 +275,15 @@ __metadata:
     alpinejs: ^3.12.3
     esbuild: ^0.18.19
     flip-js: ^0.0.4
+    omni-sdk: "link:../../../../../omni-sdk/"
     typescript: ^5.1.6
   languageName: unknown
+  linkType: soft
+
+"omni-sdk@link:../../../../../omni-sdk/::locator=omni-core-filemanager%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "omni-sdk@link:../../../../../omni-sdk/::locator=omni-core-filemanager%40workspace%3A."
+  languageName: node
   linkType: soft
 
 "typescript@npm:^5.1.6":

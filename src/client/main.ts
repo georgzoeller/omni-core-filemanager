@@ -711,6 +711,7 @@ document.addEventListener('alpine:init', async () => {
         console.error(err.name, err.message);
       }
     },
+    allowNSFW: false,
     moving: false,
     startMoving(e) {
       this.moving = true;
