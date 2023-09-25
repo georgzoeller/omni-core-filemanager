@@ -83,6 +83,11 @@ class OmniResourceWrapper
     return obj && !OmniResourceWrapper.isPlaceholder(obj) &&  obj?.mimeType?.startsWith('image/')
   }
 
+  static isVideo(obj:any)
+  {
+    return obj && !OmniResourceWrapper.isPlaceholder(obj) &&  obj?.mimeType?.startsWith('video/')
+  }
+
   static isDocument(obj:any)
   {
     return obj && !OmniResourceWrapper.isPlaceholder(obj) &&  (obj?.mimeType?.startsWith('text/') || obj?.mimeType?.startsWith('application/pdf'))
@@ -505,6 +510,8 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         return
       }
 
+
+
       this.enterViewerMode(img)
 
 
@@ -517,7 +524,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         return
       }
       this.focusedObject = img;
-      console.log('focusObject', img)
+      console.log('focusedObject', Alpine.raw(this.focusedObject))
     },
 
     previousPage() {

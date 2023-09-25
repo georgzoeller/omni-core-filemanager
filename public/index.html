@@ -211,7 +211,7 @@
         </div>
         <!-- Object Viewer -->
         <div x-cloak x-show="viewerMode || focusedObject" class="fixed  top-0 left-0 w-full h-full flex items-center justify-center bg-gray-300 opacity-100 z-10" @click="viewerMode ? window.parent.client.workbench.activeScreen ='editor' : focusObject(null)" @keydown.window.escape=" viewerExtension ? closeViewerExtension() : viewerMode ?  window.parent.client.workbench.activeScreen ='editor' : focusObject(null)" @keydown.window.arrow-right="nextObject()" @keydown.window.arrow-left="previousObject()">
-          <div class="relative flex items-start flex-col justify-top bg-black bg-opacity-40" style="width: 98vw; height: 98vh; overflow: hidden;" @click.stop @contextmenu.prevent>
+          <div class="relative flex items-start flex-col justify-top bg-black bg-opacity-40" style="width: 98vw; height: 98vh; overflow: hidden;" >
 
             <div @click.stop="previousObject()" x-show="!viewerMode && !viewerExtension" class="w-10 h-full absolute top-0 left-0 flex items-center justify-center  text-black text-4xl cursor-pointer">‹</div>
             <div class=" text-lg  p-2 w-full  flex justify-between items-center gap-5 bg-white z-20  h-12 text-black drop-shadow-md shadow-black">
@@ -316,12 +316,26 @@
             <div      :style="{ filter:  focusedObject?.meta?.nsfw?.isNsfw && !allowNSFW ? 'blur(20px)' : 'none'}"
              class="w-full h-full"
             >
-
-            <img x-show="focusedObject && !viewerExtension" :src="getDisplayUrl(focusedObject)" :style="{ transform: `scale(${scale}) translate(${x}px, ${y}px)`}" class="object-contain transition-opacity duration-200" 
-            :class="{ 'opacity-0': loading,
-            }"
-            @wheel.prevent="zoomObject" @mousedown="startMoving" @mousemove="move" @mouseup="stopMoving" @mouseleave="stopMoving" x-ref="zoomImg"
-            />
+          
+            <template x-if="focusedObject && !viewerExtension && Resource.isVideo(focusedObject)">        
+              <video controls width="100%" height="400px" x-show="focusedObject" class="object-contain transition-opacity duration-200"    :class="{ 'opacity-0': loading,
+            }" :style="{ transform: `scale(${scale}) translate(${x}px, ${y}px)`}">          
+                <source source :src="focusedObject.url" x-type="focusedObject?.mimeType|| 'video/mp4'" />
+                <p>
+                  Your browser doesn't support HTML video. Here is a
+                  <a href="myVideo.mp4">link to the video</a> instead.
+                </p>
+              </video>
+            </template>
+            <template x-if="focusedObject && !viewerExtension && Resource.isImage(focusedObject)">
+              <img x-show="focusedObject && !viewerExtension" :src="getDisplayUrl(focusedObject)" :style="{ transform: `scale(${scale}) translate(${x}px, ${y}px)`}" class="object-contain transition-opacity duration-200" 
+              :class="{ 'opacity-0': loading,
+              }"
+              @wheel.prevent="zoomObject" @mousedown="startMoving" @mousemove="move" @mouseup="stopMoving" @mouseleave="stopMoving" x-ref="zoomImg"
+              />
+            </template>
+            
+           
           </div>
             <div  class="absolute bottom-0 left-0 w-full p-2 gap-5 z-10 font-semibold drop-shadow shadow-black bg-white bg-opacity-50 text-sm flex justify-between items-center h-8">
               <span class="font-semibold cursor-pointer" style="width:10px; height:8px;" @click="allowNSFW = !allowNSFW" x-text="allowNSFW ? '👀' : '🔞'  "> </span>
