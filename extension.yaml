@@ -7,4 +7,6 @@ client:
   addToWorkbench: true
   hideBackButton: true
   singleton: true
-
+  winbox:
+    minwidth: 50%
+    minheight: 80%
