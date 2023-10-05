@@ -131,10 +131,10 @@
 
 <body class="p-6 select-none overflow-hidden ">
   <div class="m-h-screen bg-neutral-400  overflow-hidden " x-data="appState"
-    @keydown.window.prevent.stop.ctrl.shift.f="window.parent.client.workbench.activeExtension ? window.parent.client.workbench.hideExtension() :  window.parent.client.workbench.showExtension('omni-core-filemanager', {})">
+    @keydown.window.prevent.stop.ctrl.shift.f="window.parent.client.workbench.activeExtension ? close() :  window.parent.client.workbench.showExtension('omni-core-filemanager', {})">
 
     <div id="container" class=" overflow-hidden " x-data="createGallery(35 , '')"
-      @keydown.escape.window="viewerMode ? window.parent.client.workbench.hideExtension() : multiSelectedObjects.length>0 ? multiSelectedObjects = [] :  focusedObject ? focusObject(null) :  window.parent.client.workbench.hideExtension()"
+      @keydown.escape.window="viewerMode ? close() : multiSelectedObjects.length>0 ? multiSelectedObjects = [] :  focusedObject ? focusObject(null) :  close()"
       @keydown.window.prevent.stop.ctrl.i="focusedObject ? prompt(focusedObject?.url,'fid://'+focusedObject?.ticket?.fid ) : null">
       <!-- Gallery Nav  -->
       <div x-show="!viewerMode && !focusedObject"
@@ -389,7 +389,7 @@
 
             <template x-if="focusedObject && viewerExtension">
             <iframe x-show="viewerExtension" :src="viewerExtension"
-              style="width:100%; height: 100%;margin-top: 40px; margin-bottom: 40px;"
+              style="width:100%; height: 100%;"
               @keyup.window.esc.stop.prevent="await focusObject(null)">
 
             </iframe>
@@ -419,7 +419,7 @@
        
             <div
               class="absolute bottom-0 left-0 w-full p-2 gap-5 z-10 font-semibold drop-shadow shadow-black bg-white bg-opacity-50 text-sm flex justify-between items-center h-8">
-              <span class="font-semibold cursor-pointer" style="width:10px; height:8px;" @click="allowNSFW = !allowNSFW"
+              <span class="font-semibold cursor-pointer w-2.5 h-2" @click="allowNSFW = !allowNSFW"
                 x-text="allowNSFW ? '👀' : '🔞'  "> </span>
               <span><span class="font-semibold"></span> <span
                   x-text="focusedObject ? new Date(focusedObject.meta.created).toLocaleString(): ''"></span></span>
@@ -435,7 +435,7 @@
 
             </div>
             <div @click.stop="nextObject()" x-show="!viewerMode && !viewerExtension"
-              class="w-10  h-full absolute top-0 right-0  flex items-center justify-center text-black text-4xl cursor-pointer">
+              class="w-10 h-full absolute top-0 right-0  flex items-center justify-center text-black text-4xl cursor-pointer">
               ›</div>
           </div>
 

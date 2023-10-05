@@ -124,6 +124,10 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
     },
 
+    close() {
+      sdk.close();
+    },
+
     async handleWindowEvent(e) {
       console.log('handleWindowEvent', e.data)
       if (e.data?.type === "close_editor_extension") {
