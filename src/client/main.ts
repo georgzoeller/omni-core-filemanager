@@ -127,7 +127,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       let result = await sdk.runExtensionScript('action', {action: 'make_temporary', fid: file.fid})
       if (result.ok)
       {
-        sdk.showToast(result.file.fileName + ' will now expiry' + new Date(result.expiry) ,{type: "success", description: "Temporary files are automatically deleted when their expiration date is reached."})
+        sdk.showToast(result.file.fileName + ' will now expire at ' + new Date(result.expiry) ,{type: "success", description: "Temporary files are automatically deleted when their expiration date is reached."})
         this.focusedObject = result.file
       }
       else
