@@ -107,8 +107,37 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       await this.fetchObjects({limit: this.imagesPerPage, expiryType: selectedValue, replace: true});
       this.multiSelectedObjects = [];
       window.scrollTo({ top: 0, behavior: 'smooth' });
-  },
-
+    },
+    async makePermanent(file: OmniBaseResource) {
+      let result = await sdk.runExtensionScript('action', {action: 'make_permanent', fid: file.fid})
+      if (result.ok)
+      {
+        sdk.showToast('File made permanent: '+ result.file.fileName ,{type: "success", description: "Permanent files are safe from automatic deletion."})
+        this.focusedObject = result.file
+      }
+      else
+      {
+        sdk.showToast('Failed to make permanent: '+ result.reason,{type: "danger"})
+      }
+      await this.fetchObjects({limit: this.imagesPerPage,  replace: true});
+      this.multiSelectedObjects = [];
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    async makeTemporary(file: OmniBaseResource) {
+      let result = await sdk.runExtensionScript('action', {action: 'make_temporary', fid: file.fid})
+      if (result.ok)
+      {
+        sdk.showToast(result.file.fileName + ' will now expiry' + new Date(result.expiry) ,{type: "success", description: "Temporary files are automatically deleted when their expiration date is reached."})
+        this.focusedObject = result.file
+      }
+      else
+      {
+        sdk.showToast('Failed to make temporary: '+ result.reason,{type: "danger"})
+      }
+      await this.fetchObjects({limit: this.imagesPerPage,  replace: true});
+      this.multiSelectedObjects = [];
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
     closeViewerExtension() {
       this.viewerExtension = null
 
@@ -163,11 +192,10 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         this.focusObject(focusedObject)
       }
 
-
-
     },
     async handleUpload(files: FileList){
-      const uploaded = await this.uploadFiles(files, 'permanent')
+      const uploaded = await sdk.uploadFiles(files, 'permanent')
+
       await this.fetchObjects({replace:true, limit: imagesPerPage, expiryType: this.expiryType})
     },
     async runRecipeWith(runFiles: any[])
@@ -188,58 +216,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
 
     },
-    async fileToDataUrl (file) {
-      /* Encode content of file as https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URLs */
-      return new Promise(function (resolve, reject) {
-        /* Load file into javascript. */
-        const reader = new FileReader()
-        reader.onload = e => resolve(e.target.result)
-        reader.readAsDataURL(file)
-      })
-    },
 
-
-    async uploadFiles(files: FileList, storageType: 'temporary' | 'permanent' = 'temporary') {
-      if (files?.length > 0) {
-        let result = await Promise.all(
-          Array.from(files).map(async (file) => {
-            const form = new FormData();
-            form.append('storageType', storageType);
-            form.append('file', file, file.name || Date.now().toString());
-
-
-            try {
-              const response = await fetch('/fid', {
-                method: 'POST',
-                body: form,
-              });
-
-              if (response.ok) {
-                const data = await response.json();
-
-                if (data.length > 0 && data[0].ticket && data[0].fid) {
-                  return data[0];
-                } else {
-                  console.warn('Failed to upload file', { data, file });
-                  return null;
-                }
-              } else {
-                console.warn('Failed to upload file', { response, file });
-                return null;
-              }
-            } catch (error) {
-              console.error('Failed to upload file', { error, file });
-              return null;
-            }
-          })
-        );
-
-        result = result.filter((r) => r);
-        return result;
-      }
-
-      return [];
-    },
     getDisplayUrl(file, opts) {
       if (!file) {
         return '/404.png'
@@ -381,6 +358,10 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       if(opts?.expiryType && opts.expiryType !== 'any')
       {
         body.expiryType = opts.expiryType
+      }
+      else
+      {
+        body.expiryType = this.expiryType
       }
       const data = await sdk.runExtensionScript('files', body)
 

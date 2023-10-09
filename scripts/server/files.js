@@ -15,10 +15,15 @@ const script = {
       {
         file.value.url = '/fid/' + file.value.fid
       }
+      if (file.value.expires >= Number.MAX_SAFE_INTEGER)
+      {
+        delete file.value.expires
+      }
+
       return {...file.value, seq: file.seq}
     })
 
-
+    console.log(files)
     return {
       images:files
     }
