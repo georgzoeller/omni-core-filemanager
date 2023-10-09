@@ -143,7 +143,6 @@
           style="width: 98vw; height: 98.9vh; overflow: hidden">
           <div
             class="absolute text-lg top-0 left-6 mx-auto p-2  flex justify-between items-center gap-2 h-12 text-black drop-shadow-md shadow-black bg-white rounded-lg overflow-hidden">
-
             <span
               @click="await fetchObjects({limit: imagesPerPage,replace:true}); multiSelectedObjects=[]; window.scrollTo({ top: 0, behavior: 'smooth' }); "
               class="flex text-black items-center justify-center w-auto h-8 px-3 py-1 text-xs bg-red-500/60  border-0 rounded-md cursor-pointer  hover:bg-gray-500 active:bg-gray-600 focus:bg-gray-600 focus:outline-none  hover:text-neutral-600 group">
@@ -155,6 +154,15 @@
                 <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
               </svg>
             </span>
+
+
+            <select x-model="expiryType" @change="await handleExpiryChange($event)"
+              class="flex text-black items-center justify-center w-auto h-8 px-3 py-1 text-xs bg-red-500/60  border-0 rounded-md cursor-pointer  hover:bg-gray-500 active:bg-gray-600 focus:bg-gray-600 focus:outline-none  hover:text-neutral-600 group">
+              <option value="any">Show All Items</option>
+              <option value="permanent" >Show Permanent Items</option>
+              <option value="temporary">Show Temporary Items</option>
+            </select>
+
 
             <label for="file-upload"
               class="flex text-black items-center justify-center w-auto h-8 px-3 py-1 text-xs bg-green-500/60 border-0 rounded-md cursor-pointer  hover:bg-gray-500 active:bg-gray-600 focus:bg-gray-600 focus:outline-none hover:text-neutral-600 group">
@@ -212,9 +220,9 @@
             <span class="flex-grow"></span>
           </div>
           <!-- Gallery -->
-          <div class="relative custom-scroll  mt-14 ">
+          <div class="relative custom-scroll  mt-14 w-full ">
             <div class="overflow-hidden py-2 px-2 w-full">
-              <div class="flex flex-wrap justify-left items-start gap-1.5">
+              <div class="flex flex-wrap justify-left items-start gap-1.5 w-full">
                 <template x-for="(img, idx) in (await paginate()) || []" :key="idx">
                   <div style="width: 256px; height: 256px;" class="bg-gray-300 rounded-sm  ">
                     <div x-show="img === hoverItem"
@@ -224,9 +232,9 @@
                       @contextmenu.prevent="selectObject(img)" @click="await focusObject(img)"
                       :src="getDisplayUrl(img, {width: 256, height: 256, fit: 'contain'})"
                       class="object-cover rounded-sm object-top" style="width: 256px; height: 256px; cursor: zoom-in"
-                      :class="{ 'border-4 border-yellow-300': multiSelectedObjects.includes(img), 
+                      :class="{ 'border-4 border-yellow-300': multiSelectedObjects.includes(img),
                       'border-4 border-white': focusedObject === img,
-                    
+
                       }" alt="image.meta.fileName" />
 
                   </div>
@@ -250,7 +258,7 @@
       <template x-if="focusedObject">
         <div x-cloak x-show="viewerMode || focusedObject"
           class="fixed  top-0 left-0 w-full h-full flex items-center justify-center bg-gray-300 opacity-100 z-10"
-       
+
           @keydown.window.escape=" viewerExtension ? closeViewerExtension() : viewerMode ?  window.parent.client.workbench.activeScreen ='editor' : focusObject(null)"
           @keydown.window.arrow-right="nextObject()" @keydown.window.arrow-left="previousObject()">
 
@@ -396,27 +404,27 @@
             </template>
               <div x-show="focusedObject && !viewerExtension" :style="{ filter:  focusedObject?.meta?.nsfw?.isNsfw && !allowNSFW ? 'blur(20px)' : 'none'}"
                 class="w-full h-full">
-              
+
                   <video  autoplay loop muted x-show="focusedObject &&  Resource.isVideo(focusedObject)" controls width="100%" height="400px" x-show="focusedObject"
-                  x-init="$watch('focusedObject?.url', () => $el.load())"  
+                  x-init="$watch('focusedObject?.url', () => $el.load())"
                   class="object-contain transition-opacity duration-200" :class="{ 'opacity-0': loading,
                 }" :style="{ transform: `scale(${scale}) translate(${x}px, ${y}px)`}">
-                   
+
                       <source  :src="focusedObject?.url" x-type="focusedObject?.mimeType|| 'video/mp4'" />
-                   
+
                     <p>
                       Your browser doesn't support HTML video. Here is a
                       <a :href="focusedObject.url">link to the video</a> instead.
                     </p>
                   </video>
-               
+
                   <img x-show="focusedObject && !viewerExtension && Resource.isImage(focusedObject)" :src="getDisplayUrl(focusedObject)"
                     :style="{ transform: `scale(${scale}) translate(${x}px, ${y}px)`}"
                     class="object-contain transition-opacity duration-200" :class="{ 'opacity-0': loading,
                   }" @wheel.prevent="zoomObject" @mousedown="startMoving" @mousemove="move" @mouseup="stopMoving"
                     @mouseleave="stopMoving" x-ref="zoomImg" />
               </div>
-       
+
             <div
               class="absolute bottom-0 left-0 w-full p-2 gap-5 z-10 font-semibold drop-shadow shadow-black bg-white bg-opacity-50 text-sm flex justify-between items-center h-8">
               <span class="font-semibold cursor-pointer w-2.5 h-2" @click="allowNSFW = !allowNSFW"

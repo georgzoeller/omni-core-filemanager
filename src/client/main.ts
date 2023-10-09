@@ -1,6 +1,6 @@
 
 import Alpine from 'alpinejs'
-import {OmniSDKClient} from 'omni-sdk';
+import {OmniBaseResource, OmniSDKClient} from 'omni-sdk';
 
 const sdk = new OmniSDKClient("omni-core-filemanager").init();
 
@@ -19,26 +19,8 @@ let viewerMode = focusedObject ? true : false
 
 
 
-
-const downloadObject = function(image) {
-
-  let fid = image.fid
-  const filename = image.fileName
-
-  fetch('/fid/' + fid + '?download=true')
-      .then(response => response.blob())
-      .then(blob => {
-
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = filename;
-
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-      })
-      .catch(error => console.error(error));
+const downloadObject = async  function(file:OmniBaseResource) {
+  await sdk.downloadFile(file, file.fileName)
 }
 
 
@@ -118,6 +100,14 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
     y: 0,
     focusedObject: focusedObject || null,
     hover: false,
+    expiryType: 'permanent',
+    async handleExpiryChange(event) {
+      let selectedValue = event.target.value;
+      this.expiryType = selectedValue;
+      await this.fetchObjects({limit: this.imagesPerPage, expiryType: selectedValue, replace: true});
+      this.multiSelectedObjects = [];
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+  },
 
     closeViewerExtension() {
       this.viewerExtension = null
@@ -137,13 +127,13 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         {
           this.focusObject(e.data.newFocus)
         }
-        await this.fetchObjects({replace:true, limit: imagesPerPage})
+        await this.fetchObjects({replace:true, limit: imagesPerPage, expiryType: this.expiryType})
       }
     },
 
     async init() {
 
-      await this.fetchObjects({replace:true, limit: imagesPerPage})
+      await this.fetchObjects({replace:true, limit: imagesPerPage, expiryType: this.expiryType})
 
       if (windowListener)
       {
@@ -177,11 +167,8 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
     },
     async handleUpload(files: FileList){
-      const uploaded = await this.uploadFiles(files)
-
-      await this.fetchObjects({replace:true, limit: imagesPerPage})
-
-
+      const uploaded = await this.uploadFiles(files, 'permanent')
+      await this.fetchObjects({replace:true, limit: imagesPerPage, expiryType: this.expiryType})
     },
     async runRecipeWith(runFiles: any[])
     {
@@ -210,13 +197,16 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         reader.readAsDataURL(file)
       })
     },
-    async uploadFiles(files: FileList) {
+
+
+    async uploadFiles(files: FileList, storageType: 'temporary' | 'permanent' = 'temporary') {
       if (files?.length > 0) {
         let result = await Promise.all(
           Array.from(files).map(async (file) => {
             const form = new FormData();
+            form.append('storageType', storageType);
             form.append('file', file, file.name || Date.now().toString());
-            this.imageUrl = await this.fileToDataUrl(file);
+
 
             try {
               const response = await fetch('/fid', {
@@ -338,12 +328,6 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       if (images && images.length) {
         this.images = this.images.filter(item => item.onclick == null)
 
-        images = images.map(f => {
-          if (f.mimeType.startsWith('audio/') || f.mimeType == 'application/ogg') {
-            f.isAudio = true
-          }
-          return f
-        })
 
         this.cursor = images[images.length - 1].seq
         if (replace) {
@@ -361,7 +345,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
           if (lastCursor != this.cursor || replace) {
             this.images.push({
               onclick: async () => {
-                await self.fetchObjects({ cursor: self.cursor })
+                await self.fetchObjects({ cursor: self.cursor,  expiryType: this.expiryType })
               }, url: '/more.png', meta: {}, fileName: "Load More..."
             })
           }
@@ -370,21 +354,33 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         this.totalPages = Math.ceil(this.images.length / this.imagesPerPage);
 
       }
+      else
+      {
+        if (replace)
+        {
+          this.images = []
+          this.totalPages = 0;
+        }
+      }
+
     },
 
 
 
-    async fetchObjects(opts?: { cursor?: string, limit?: number,  replace?: boolean}) {
+    async fetchObjects(opts?: { cursor?: string, limit?: number,  replace?: boolean,  expiryType?: 'any'|'permanent'|'temporary'}) {
       if (this.viewerMode) {
         return Promise.resolve()
       }
-
-      const body: { limit: number, cursor?: string } = { limit: this.imagesPerPage }
+      const body: { limit: number, cursor?: string, expiryType?: 'permanent' | 'temporary' } = { limit: this.imagesPerPage }
       if (opts?.cursor) {
         body.cursor = opts?.cursor
       }
       if(opts?.limit && typeof(opts.limit) === 'number' &&  opts.limit > 0) {
         body.limit = Math.max(opts.limit,2)
+      }
+      if(opts?.expiryType && opts.expiryType !== 'any')
+      {
+        body.expiryType = opts.expiryType
       }
       const data = await sdk.runExtensionScript('files', body)
 
@@ -471,8 +467,9 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       }
       else if (OmniResourceWrapper.isAudio(obj))
       {
+         sdk.signalIntent('edit','', Alpine.raw(obj), {winbox:{title: 'Edit Audio'}})
         //@ts-ignore
-        window.parent.client.workbench.showExtension('omni-extension-wavacity', {url: this.focusedObject?.url, filename: this.focusedObject?.fileName}, undefined, {winbox:{title: 'Edit Audio'}})
+        //window.parent.client.workbench.showExtension('omni-extension-wavacity', {url: this.focusedObject?.url, filename: this.focusedObject?.fileName}, undefined, {winbox:{title: 'Edit Audio'}})
       }
     },
 
@@ -609,7 +606,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       if (result.ok) {
         const resultObject = result.image
         await downloadObject(resultObject)
-        await this.fetchObjects({replace:true, limit: imagesPerPage})
+        await this.fetchObjects({replace:true, limit: imagesPerPage, expiryType: this.expiryType})
       }
       else
       {

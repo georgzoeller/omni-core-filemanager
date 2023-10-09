@@ -3,12 +3,13 @@ const script = {
 
   exec: async function (ctx, payload) {
 
+    console.log("-----files", payload)
     let limit = payload.limit || 50
     let cursor = payload.cursor || undefined
-
+    let expiryType = payload.expiryType
 
     let tags = 'user.' + ctx.user.id
-    let images =  ctx.app.cdn.kvStorage.getAny('file.',undefined,{limit,cursor, tags}).map((file) => {
+    let files =  ctx.app.cdn.kvStorage.getAny('file.',undefined,{limit,cursor, expiryType, tags}).map((file) => {
 
       if (file.value.fid)
       {
@@ -19,7 +20,7 @@ const script = {
 
 
     return {
-      images
+      images:files
     }
   }
 

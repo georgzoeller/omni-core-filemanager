@@ -2,7 +2,7 @@
   "name": "omni-core-filemanager",
   "packageManager": "yarn@3.3.1",
   "scripts": {
-    "build": "esbuild --bundle --minify ./main.ts --outdir=../../public/  --format=esm --analyze --color=true --target=es2020  --platform=browser"
+    "build": "esbuild --bundle  ./main.ts --outdir=../../public/  --format=esm --analyze --color=true --target=es2020  --platform=browser"
   },
   "externals": [
     "omni-sdk"
