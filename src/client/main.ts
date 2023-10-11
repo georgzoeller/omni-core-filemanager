@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) 2023 MERCENARIES.AI PTE. LTD.
+ * All rights reserved.
+ */
+
 
 import Alpine from 'alpinejs'
 import {OmniBaseResource, OmniSDKClient} from 'omni-sdk';
