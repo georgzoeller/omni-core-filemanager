@@ -17,11 +17,10 @@ declare global {
 
 // -------------------- Viewer Mode: If q.focusedObject is set, we hide the gallery and show the image full screen -----------------------
 const args = new URLSearchParams(location.search)
-const params = JSON.parse(args.get('q'))
+const params = sdk.args
 let focusedObject = null
-focusedObject = params?.focusedObject || params.fid
+focusedObject = params?.focusedObject || params?.file
 let viewerMode = focusedObject ? true : false
-
 
 
 const downloadObject = async  function(file:OmniBaseResource) {
@@ -167,7 +166,11 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
     async init() {
 
-      await this.fetchObjects({replace:true, limit: imagesPerPage, expiryType: this.expiryType})
+
+      if (!viewerMode)
+      {
+        await this.fetchObjects({replace:true, limit: imagesPerPage, expiryType: this.expiryType})
+      }
 
       if (windowListener)
       {
@@ -194,6 +197,10 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
       if (viewerMode)
       {
+
+          focusedObject = await sdk.getFileObject(focusedObject.fid)
+
+
         this.focusObject(focusedObject)
       }
 
