@@ -27,11 +27,11 @@ const script = {
       {
         delete file.value.expires
       }
-
-      return {...file.value, seq: file.seq, tags: file.tags.split(',').filter((tag) => tag).map((tag) => tag.replace('#tag.', '').trim()) }
+      console.log(file.tags)
+      return {...file.value, seq: file.seq, tags: file.tags.map((tag) => tag.replace('#tag.', '').trim() ||[] ) }
     })
 
-    console.log(files)
+
     return {
       images:files
     }
