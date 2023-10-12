@@ -28,7 +28,7 @@ const script = {
         delete file.value.expires
       }
       console.log(file.tags)
-      return {...file.value, seq: file.seq, tags: file.tags.map((tag) => tag.replace('#tag.', '').trim() ||[] ) }
+      return {...file.value, seq: file.seq, tags: file.tags.map((tag) => tag.replace('#tag.', '') ||[] ) }
     })
 
 
