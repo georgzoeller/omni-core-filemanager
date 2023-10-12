@@ -19,7 +19,7 @@ declare global {
 const args = new URLSearchParams(location.search)
 const params = JSON.parse(args.get('q'))
 let focusedObject = null
-focusedObject = params?.focusedObject
+focusedObject = params?.focusedObject || params.fid
 let viewerMode = focusedObject ? true : false
 
 

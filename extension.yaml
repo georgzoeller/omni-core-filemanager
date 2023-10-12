@@ -9,4 +9,11 @@ client:
   singleton: true
   winbox:
     minwidth: 50%
+    width: 1024
     minheight: 80%
+  fileIntents:
+    show:
+      'image/*':
+        opts: {}
+      'video/*':
+        opts: {}
