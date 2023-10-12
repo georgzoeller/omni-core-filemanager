@@ -46,7 +46,7 @@
 
 <body class="p-6 select-none overflow-hidden ">
   <div class="m-h-screen bg-neutral-400  overflow-hidden " x-data="appState"
-    @keydown.window.prevent.stop.ctrl.shift.f="window.parent.client.workbench.activeExtension ? close() :  window.parent.client.workbench.showExtension('omni-core-filemanager', {})">
+    @keydown.window.prevent.stop.ctrl.shift.f="close()">
 
     <div id="container" class=" overflow-hidden " x-data="createGallery(35 , '')"
       @keydown.escape.window="viewerMode ? close() : multiSelectedObjects.length>0 ? multiSelectedObjects = [] :  focusedObject ? focusObject(null) :  close()"
@@ -57,7 +57,7 @@
         <div x-data="{hoverItem: null}" class="relative p-2 flex flex-row items-top justify-center overflow-hidden"
           style="width: 98vw; height: 98.9vh; overflow: hidden">
           <div
-            class="absolute text-lg top-0 left-6 mx-auto p-2  flex justify-between items-center gap-2 h-12 text-black drop-shadow-md shadow-black bg-white rounded-lg overflow-hidden">
+            class="absolute text-lg top-0 left-6 mx-auto p-2  flex justify-between items-center gap-2 h-12 text-black drop-shadow-md shadow-black bg-whiterounded-lg overflow-hidden">
             <span
               @click="await fetchObjects({limit: imagesPerPage,  replace:true}); multiSelectedObjects=[]; window.scrollTo({ top: 0, behavior: 'smooth' }); "
               class="flex text-black items-center justify-center w-auto h-8 px-3 py-1 text-xs bg-red-500/60  border-0 rounded-md cursor-pointer  hover:bg-gray-500 active:bg-gray-600 focus:bg-gray-600 focus:outline-none  hover:text-neutral-600 group">
@@ -174,7 +174,7 @@
         <div x-cloak x-show="viewerMode || focusedObject"
           class="fixed  top-0 left-0 w-full h-full flex items-center justify-center bg-gray-300 opacity-100 z-10"
 
-          @keydown.window.escape=" viewerExtension ? closeViewerExtension() : viewerMode ?  window.parent.client.workbench.activeScreen ='editor' : focusObject(null)"
+          @keydown.window.escape=" viewerExtension ? closeViewerExtension() : null; focusObject(null)"
           @keydown.window.arrow-right="nextObject()" @keydown.window.arrow-left="previousObject()">
 
 
@@ -185,7 +185,7 @@
               class="w-10 h-full absolute top-0 left-0 flex items-center justify-center  text-black text-4xl cursor-pointer">
               ‹</div>
             <div
-              class=" text-lg  p-2 w-full  flex justify-between items-center gap-5 bg-white z-20  h-12 text-black drop-shadow-md shadow-black">
+              class=" text-lg  p-2 w-full  flex justify-between items-center gap-5 bg-gray-50 z-20  h-12 text-black drop-shadow-md shadow-black">
 
               <span x-show="!focusedObject?.onclick" @click="sendToChat(focusedObject)"
                 class="flex items-center justify-center w-auto h-8 px-3 py-1 text-xs bg-transparent  rounded-md cursor-pointer  hover:bg-gray-500 active:bg-gray-600 focus:bg-gray-600 focus:outline-none text-neutral-500 hover:text-neutral-600 group">
@@ -299,7 +299,7 @@
               </span>
               <span
                 x-show="focusedObject"
-                @click.stop="viewerMode? focusedObject = null; viewerMode = false "
+                @click.stop="focusedObject = null; viewerMode = false "
                 class="flex items-center justify-center w-auto h-8 px-3 py-1 mr-8 text-xs bg-transparent border rounded-md cursor-pointer  hover:bg-gray-500 active:bg-gray-600 focus:bg-gray-600 focus:outline-none text-neutral-500 hover:text-neutral-600 group">
                 <span>Close</span>
                 <svg class="w-5 h-5 ml-1.5 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none"

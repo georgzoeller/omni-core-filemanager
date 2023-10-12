@@ -461,13 +461,24 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
     async enterViewerMode(img)
     {
-      if (img.mimeType === 'application/pdf')
+
+      if (img.mimeType.startsWith('application/pdf'))
       {
         this.viewerExtension = '/extensions/omni-core-viewers/pdf.html?file='+encodeURIComponent(`/fid/${img.fid}`)
       }
-      else if( img.mimeType === 'text/markdown' || img.mimeType === 'text/plain')
+      else if( img.mimeType.startsWith('text/markdown'))
       {
         this.viewerExtension = '/extensions/omni-core-viewers/markdown.html?q='+encodeURIComponent(JSON.stringify(
+          {
+            file: {
+              fid: img.fid,
+              mimeType: img.mimeType
+            }
+          }))
+      }
+      else if( img.mimeType.startsWith('text/plain'))
+      {
+        this.viewerExtension = '/extensions/omni-core-viewers/monaco.html?q='+encodeURIComponent(JSON.stringify(
           {
             file: {
               fid: img.fid,
