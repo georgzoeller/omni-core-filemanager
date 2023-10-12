@@ -13,8 +13,11 @@ const script = {
     let cursor = payload.cursor || undefined
     let expiryType = payload.expiryType
 
-    let tags = 'user.' + ctx.user.id
-    let files =  ctx.app.cdn.kvStorage.getAny('file.',undefined,{limit,cursor, expiryType, tags}).map((file) => {
+    let owner = {
+      user: ctx.userId.toLowerCase(),
+      includeUnowned: payload.includeUnowned ?? true
+    }
+    let files =  ctx.app.cdn.kvStorage.getAny('file.',undefined,{limit,cursor, expiryType, owner}).map((file) => {
 
       if (file.value.fid)
       {
@@ -25,7 +28,7 @@ const script = {
         delete file.value.expires
       }
 
-      return {...file.value, seq: file.seq}
+      return {...file.value, seq: file.seq, tags: file.tags.split(',').filter((tag) => tag).map((tag) => tag.replace('#tag.', '').trim()) }
     })
 
     console.log(files)
