@@ -3,7 +3,6 @@
  * All rights reserved.
  */
 
-
 import Alpine from 'alpinejs'
 import {OmniBaseResource, OmniSDKClient} from 'omni-sdk';
 
@@ -15,19 +14,13 @@ declare global {
   }
 }
 
-// -------------------- Viewer Mode: If q.focusedObject is set, we hide the gallery and show the image full screen -----------------------
-const args = new URLSearchParams(location.search)
 const params = sdk.args
-let focusedObject = null
-focusedObject = params?.focusedObject || params?.file
-let viewerMode = focusedObject ? true : false
-
+let focusedObject = params?.focusedObject || params?.file
+let viewerMode = !!focusedObject // On startup, if params.focusedObject is set, hide the gallery and show the image full screen.
 
 const downloadObject = async  function(file:OmniBaseResource) {
   await sdk.downloadFile(file, file.fileName)
 }
-
-
 
 const copyToClipboardComponent = () => {
   return {
@@ -39,12 +32,9 @@ const copyToClipboardComponent = () => {
       const blob = await res.blob();
       const data = [new ClipboardItem({ [blob.type]: blob })];
       await navigator.clipboard.write(data);
-      //alert('Object copied to clipboard');
-      //navigator.clipboard.writeText(this.copyText);
       this.copyNotification = true;
-      let that = this;
-      setTimeout(function () {
-        that.copyNotification = false;
+      setTimeout(() => {
+        this.copyNotification = false;
       }, 3000);
     }
   }
@@ -78,7 +68,6 @@ class OmniResourceWrapper
   {
     return obj && !OmniResourceWrapper.isPlaceholder(obj) &&  (obj?.mimeType?.startsWith('text/') || obj?.mimeType?.startsWith('application/pdf'))
   }
-
 
 }
 
@@ -144,7 +133,6 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
     },
     closeViewerExtension() {
       this.viewerExtension = null
-
     },
 
     close() {
@@ -165,7 +153,6 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
     },
 
     async init() {
-
 
       if (!viewerMode)
       {
@@ -197,10 +184,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
       if (viewerMode)
       {
-
-          focusedObject = await sdk.getFileObject(focusedObject.fid)
-
-
+        focusedObject = await sdk.getFileObject(focusedObject.fid)
         this.focusObject(focusedObject)
       }
 
@@ -226,30 +210,28 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       //@ts-ignore
       window.parent.client.runScript('run', args)
 
-
     },
 
     getDisplayUrl(file, opts) {
       if (!file) {
         return '/404.png'
       }
-      else if (file?.mimeType?.startsWith('audio/') || file.mimeType == 'application/ogg') {
+      if (file?.mimeType?.startsWith('audio/') || file.mimeType == 'application/ogg') {
         return '/audio.png'
       }
-      else if (file?.mimeType?.startsWith('application/json') || file.mimeType == 'text/json') {
+      if (file?.mimeType?.startsWith('application/json') || file.mimeType == 'text/json') {
         return '/json.png'
       }
 
-      else if (file?.mimeType?.startsWith('application/pdf')) {
+      if (file?.mimeType?.startsWith('application/pdf')) {
         return '/pdf.png'
       }
 
-      else if (file?.mimeType?.startsWith('text/')) {
+      if (file?.mimeType?.startsWith('text/')) {
         return '/document.png'
       }
 
-      else if (file?.mimeType?.startsWith('image/')) {
-
+      if (file?.mimeType?.startsWith('image/')) {
         if (opts && (opts.width || opts.height)) {
           let url = file.url
           // add all provided opts into query string using UrlSearchParams
@@ -264,13 +246,12 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
         return file.url
       }
-      else  if (file?.meta?.type === 'recipe') {
+
+      if (file?.meta?.type === 'recipe') {
         return '/recipe.png'
       }
-      else {
-        console.log(Alpine.raw(file))
-        return '/ph_250.png'
-      }
+      console.log('Unknown display url for', Alpine.raw(file), file.mimeType)
+      return '/ph_250.png'
     },
 
     async addToCanvas(objs) {
@@ -295,8 +276,6 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       {
         sdk.runClientScript('add', ["omnitool.input_static_document", {doc: 'fid://' + doc.fid, preview: [JSON.parse(JSON.stringify(doc))]}] )
       })
-
-
     },
 
     canEdit(obj) {
@@ -308,15 +287,11 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       return obj && sdk.canViewFile(Alpine.raw(obj))
     },
 
-
-
     async addItems(images, replace = false)
     {
-
       let lastCursor = this.cursor
       if (images && images.length) {
         this.images = this.images.filter(item => item.onclick == null)
-
 
         this.cursor = images[images.length - 1].seq
         if (replace) {
@@ -354,8 +329,6 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
     },
 
-
-
     async fetchObjects(opts?: { cursor?: string, limit?: number,  replace?: boolean,  expiryType?: 'any'|'permanent'|'temporary'}) {
       if (this.viewerMode) {
         return Promise.resolve()
@@ -376,10 +349,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         body.expiryType = this.expiryType
       }
       const data = await sdk.runExtensionScript('files', body)
-
       this.addItems(data.images, opts?.replace)
-
-
     },
     selectObject(img) {
       if (img.onclick) {
@@ -393,11 +363,6 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       }
     },
     paginate() {
-
-      /*console.log('paginate')
-      const start = (this.currentPage - 1) * this.imagesPerPage;
-      const end = this.currentPage * this.imagesPerPage;
-      return this.images.slice(start, end);*/
       return this.images
     },
 
@@ -406,7 +371,6 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       if (currentIndex < this.images.length - 1) {
         await this.focusObject(this.images[currentIndex + 1]);
       }
-
     },
 
     animateTransition() {
@@ -424,9 +388,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       if (currentIndex > 0) {
         await this.focusObject(this.images[currentIndex - 1]);
       }
-
     },
-
 
     nextPage() {
       if (this.currentPage < this.totalPages) {
@@ -448,12 +410,6 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         {
           // Signal the intent to edit the object, leaving the host to decide which editor to use
           sdk.signalIntent('edit','', Alpine.raw(obj), {winbox:{title: 'Edit Image'}})
-
-          //@ts-ignore
-          //window.parent.client.workbench.showExtension('omni-extension-minipaint', {url: this.focusedObject?.url, filename: this.focusedObject?.fileName}, undefined, {winbox:{title: 'Edit Image'}})
-
-          //this.viewerExtension='/extensions/omni-extension-minipaint/?q='+encodeURIComponent(JSON.stringify({url: this.focusedObject?.url, filename: this.focusedObject?.fileName}));
-
           this.showInfo = false
           return
         }
@@ -461,19 +417,17 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       else if (OmniResourceWrapper.isAudio(obj))
       {
          sdk.signalIntent('edit','', Alpine.raw(obj), {winbox:{title: 'Edit Audio'}})
-        //@ts-ignore
-        //window.parent.client.workbench.showExtension('omni-extension-wavacity', {url: this.focusedObject?.url, filename: this.focusedObject?.fileName}, undefined, {winbox:{title: 'Edit Audio'}})
       }
     },
 
     async enterViewerMode(img)
     {
-
-      if (img.mimeType.startsWith('application/pdf'))
+      this.viewerExtension = null
+      if (img?.mimeType?.startsWith('application/pdf'))
       {
         this.viewerExtension = '/extensions/omni-core-viewers/pdf.html?file='+encodeURIComponent(`/fid/${img.fid}`)
       }
-      else if( img.mimeType.startsWith('text/markdown'))
+      else if( img?.mimeType?.startsWith('text/markdown'))
       {
         this.viewerExtension = '/extensions/omni-core-viewers/markdown.html?q='+encodeURIComponent(JSON.stringify(
           {
@@ -483,7 +437,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
             }
           }))
       }
-      else if( img.mimeType.startsWith('text/plain'))
+      else if( img?.mimeType?.startsWith('text/plain'))
       {
         this.viewerExtension = '/extensions/omni-core-viewers/monaco.html?q='+encodeURIComponent(JSON.stringify(
           {
@@ -497,14 +451,9 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       {
         this.viewerExtension = '/extensions/omni-extension-plyr/?q='+encodeURIComponent(JSON.stringify({sources:[img]}))
       }
-
-
-
     },
 
     async focusObject(img) {
-
-
 
       if (img == null)
       {
@@ -513,10 +462,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         return
       }
 
-
-
       this.enterViewerMode(img)
-
 
       this.animateTransition()
       this.x = 0
@@ -592,8 +538,6 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
               { 'id': 'run', title: '🞂 Run', args: [null, { ...img }] }]
           }, ['no-picture'])
         }
-
-
     },
     async exportObject(img) {
       const imageFid = img
@@ -615,10 +559,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       else
       {
         alert('Failed to export image: '+  result.reason)
-
       }
-
-
     },
 
     async importObject(img) {
@@ -683,7 +624,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
           if (data.deleted.includes(this.focusedObject.fid)) {
             this.focusedObject = null
             // In viewer mode, we close the extension if the focused image is deleted
-            if (this.viewerMode === true) {
+            if (this.viewerMode) {
               sdk.close()
             }
           }
@@ -692,15 +633,9 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
         await this.fetchObjects({cursor: this.cursor, limit: data.deleted.length})
 
       }
-
     }
   }
-
 }
-
-
-
-
 
 window.Alpine = Alpine
 document.addEventListener('alpine:init', async () => {
@@ -739,21 +674,11 @@ document.addEventListener('alpine:init', async () => {
     stopMoving() {
       this.moving = false;
     },
-
-
   }
-
   ))
-
 }
 )
 
-
-
-
 Alpine.start()
-
-
-
 
 export default {}
