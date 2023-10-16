@@ -113,10 +113,12 @@
             <button x-show="multiSelectedObjects.length > 0" @click="await addToCanvas(multiSelectedObjects)"
               class="flex items-center justify-center w-auto h-8 px-3 py-1 text-xs bg-transparent  rounded-md cursor-pointer  hover:bg-gray-500 active:bg-gray-600 focus:bg-gray-600 focus:outline-none text-neutral-500 hover:text-neutral-600 group">
               <span>Add To Canvas</span>
-              <svg class="w-5 h-5 ml-1.5 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none"
-                viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
-                <line x1="22" y1="2" x2="11" y2="13" />
-                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              <svg class="w-6 h-6 stroke-current" viewBox='0 0 18 18' fill='none' xmlns='http://www.w3.org/2000/svg'>
+                <path
+                  d='M14.1147 7.55356L14.1148 3.52977C14.1148 2.13263 12.9404 1.00002 11.4918 1.00001L3.62302 1C2.1744 0.999997 1.00006 2.13261 1.00006 3.52975L1 10.9107C0.999996 12.3078 2.17433 13.4405 3.62295 13.4405H8.00214M11.2295 13.4405H14.1148M14.1148 13.4405H17M14.1148 13.4405V10.6577M14.1148 13.4405V16.7291'
+                  stroke-width='1.6'
+                  stroke-linecap='round'
+                />
               </svg>
             </button>
 
@@ -201,10 +203,12 @@
                 @click="await addToCanvas(focusedObject)"
                 class="flex items-center justify-center w-auto h-8 px-3 py-1 text-xs bg-transparent  rounded-md cursor-pointer  hover:bg-gray-500 active:bg-gray-600 focus:bg-gray-600 focus:outline-none text-neutral-500 hover:text-neutral-600 group">
                 <span>Add To Canvas</span>
-                <svg class="w-5 h-5 ml-1.5 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none"
-                  viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
-                  <line x1="22" y1="2" x2="11" y2="13" />
-                  <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                <svg class="w-6 h-6 stroke-current" viewBox='0 0 18 18' fill='none' xmlns='http://www.w3.org/2000/svg'>
+                  <path
+                    d='M14.1147 7.55356L14.1148 3.52977C14.1148 2.13263 12.9404 1.00002 11.4918 1.00001L3.62302 1C2.1744 0.999997 1.00006 2.13261 1.00006 3.52975L1 10.9107C0.999996 12.3078 2.17433 13.4405 3.62295 13.4405H8.00214M11.2295 13.4405H14.1148M14.1148 13.4405H17M14.1148 13.4405V10.6577M14.1148 13.4405V16.7291'
+                    stroke-width='1.6'
+                    stroke-linecap='round'
+                  />
                 </svg>
               </button>
 
