@@ -30,7 +30,21 @@ const copyToClipboardComponent = () => {
     async copyToClipboard(img) {
       const res = await fetch('/fid/' + img.ticket.fid || img.fid);
       const blob = await res.blob();
-      const data = [new ClipboardItem({ [blob.type]: blob })];
+
+      let clipJSON = { [blob.type]: blob }
+
+      if (blob.type === 'image/jpeg') { // if JPEG, convert to PNG for clipboard
+        const imageBitmap = await createImageBitmap(blob);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = imageBitmap.width;
+        canvas.height = imageBitmap.height;
+        ctx.drawImage(imageBitmap, 0, 0);
+        const pngBlob = await new Promise<Blob>((resolve) => canvas.toBlob(resolve, 'image/png'));
+        clipJSON = { 'image/png': pngBlob }
+      }
+
+      const data = [new ClipboardItem(clipJSON)];
       await navigator.clipboard.write(data);
       this.copyNotification = true;
       setTimeout(() => {
