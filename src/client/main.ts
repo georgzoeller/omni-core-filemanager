@@ -228,21 +228,21 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
     getDisplayUrl(file, opts) {
       if (!file) {
-        return '/404.png'
+        return '/extensions/omni-core-filemanager/assets/404.png'
       }
       if (file?.mimeType?.startsWith('audio/') || file.mimeType == 'application/ogg') {
-        return '/audio.png'
+        return '/extensions/omni-core-filemanager/assets/audio.png'
       }
       if (file?.mimeType?.startsWith('application/json') || file.mimeType == 'text/json') {
-        return '/json.png'
+        return '/extensions/omni-core-filemanager/assets/json.png'
       }
 
       if (file?.mimeType?.startsWith('application/pdf')) {
-        return '/pdf.png'
+        return '/extensions/omni-core-filemanager/assets/pdf.png'
       }
 
       if (file?.mimeType?.startsWith('text/')) {
-        return '/document.png'
+        return '/extensions/omni-core-filemanager/assets/document.png'
       }
 
       if (file?.mimeType?.startsWith('image/')) {
@@ -262,10 +262,10 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       }
 
       if (file?.meta?.type === 'recipe') {
-        return '/recipe.png'
+        return '/extensions/omni-core-filemanager/assets/recipe.png'
       }
       console.log('Unknown display url for', Alpine.raw(file), file.mimeType)
-      return '/ph_250.png'
+      return '/extensions/omni-core-filemanager/assets/ph_250.png'
     },
 
     async addToCanvas(objs) {
@@ -324,7 +324,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
             this.images.push({
               onclick: async () => {
                 await self.fetchObjects({ cursor: self.cursor,  expiryType: this.expiryType })
-              }, url: '/more.png', meta: {}, fileName: "Load More..."
+              }, url: '/extensions/omni-core-filemanager/assets/more.png', meta: {}, fileName: "Load More..."
             })
           }
         }
