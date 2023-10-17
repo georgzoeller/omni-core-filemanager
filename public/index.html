@@ -150,7 +150,7 @@
                       :class="{ 'border-4 border-yellow-300': multiSelectedObjects.includes(img),
                       'border-4 border-white': focusedObject === img,
 
-                      }" alt="image.meta.fileName" />
+                      }" alt="image.fileName" />
 
                   </div>
 
@@ -197,7 +197,7 @@
                 </svg>
               </span>
 
-              <button x-show="Resource.isImage(focusedObject) || Resource.isDocument(focusedObject) "
+              <button x-show="Resource.isImage(focusedObject) || Resource.isDocument(focusedObject) || Resource.isAudio(focusedObject) "
                 @click="await addToCanvas(focusedObject)"
                 class="flex items-center justify-center w-auto h-8 px-3 py-1 text-xs bg-transparent  rounded-md cursor-pointer  hover:bg-gray-500 active:bg-gray-600 focus:bg-gray-600 focus:outline-none text-neutral-500 hover:text-neutral-600 group">
                 <span>Add To Canvas</span>
@@ -346,9 +346,9 @@
               <span><span class="font-semibold cursor-pointer w-2.5" @click="allowNSFW = !allowNSFW"
                 x-text="allowNSFW ? '👀' : '🔞'  "> </span></span>
               <span><span class="font-semibold"></span> <span
-                  x-text="focusedObject ? new Date(focusedObject.meta.created).toLocaleString(): ''"></span></span>
+                  x-text="focusedObject ? new Date(focusedObject?G.meta.created).toLocaleString(): ''"></span></span>
               <span><span class="font-semibold"></span> <span
-                  x-text="focusedObject?.mimeType?.startsWith('image/') ? focusedObject?.meta.width + 'x' + focusedObject?.meta.height + ' pixels' : ''"></span></span>
+                  x-text="focusedObject?.mimeType?.startsWith('image/') ? focusedObject?.meta?.width + 'x' + focusedObject?.meta?.height + ' pixels' : ''"></span></span>
               <span><span class="font-semibold"></span><span class="drop-shadow-md"
                   x-text="focusedObject?.mimeType"></span></span>
               <span x-show="focusedObject && focusedObject.expires" @click="makePermanent(focusedObject)"><span  class="font-semibold cursor-pointer"></span><span class="drop-shadow-md cursor-pointer"

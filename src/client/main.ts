@@ -230,25 +230,26 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
     },
 
     getDisplayUrl(file, opts) {
+      console.log(file.mimeType)
       if (!file) {
         return '/404.png'
       }
-      else if (file?.mimeType?.startsWith('audio/') || file.mimeType == 'application/ogg') {
+      else if (file.mimeType?.startsWith('audio/') || file.mimeType == 'application/ogg') {
         return '/audio.png'
       }
-      else if (file?.mimeType?.startsWith('application/json') || file.mimeType == 'text/json') {
+      else if (file.mimeType?.startsWith('application/json') || file.mimeType == 'text/json') {
         return '/json.png'
       }
 
-      else if (file?.mimeType?.startsWith('application/pdf')) {
+      else if (file.mimeType?.startsWith('application/pdf')) {
         return '/pdf.png'
       }
 
-      else if (file?.mimeType?.startsWith('text/')) {
+      else if (file.mimeType?.startsWith('text/')) {
         return '/document.png'
       }
 
-      else if (file?.mimeType?.startsWith('image/')) {
+      else if (file.mimeType?.startsWith('image/')) {
 
         if (opts && (opts.width || opts.height)) {
           let url = file.url
@@ -264,7 +265,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
         return file.url
       }
-      else  if (file?.meta?.type === 'recipe') {
+      else  if (file.meta?.type === 'recipe') {
         return '/recipe.png'
       }
       else {
