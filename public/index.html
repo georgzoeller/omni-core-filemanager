@@ -342,7 +342,7 @@
               <span><span class="font-semibold cursor-pointer w-2.5" @click="allowNSFW = !allowNSFW"
                   x-text="allowNSFW ? '👀' : '🔞'  "> </span></span>
               <span><span class="font-semibold"></span> <span
-                  x-text="focusedObject ? new Date(focusedObject?G.meta.created).toLocaleString(): ''"></span></span>
+                  x-text="focusedObject?.meta?.created ? 'Created ' + new Date(focusedObject.meta.created).toLocaleString(): ''"></span></span>
               <span><span class="font-semibold"></span> <span
                   x-text="focusedObject?.mimeType?.startsWith('image/') ? focusedObject?.meta?.width + 'x' + focusedObject?.meta?.height + ' pixels' : ''"></span></span>
               <span><span class="font-semibold"></span><span class="drop-shadow-md"
