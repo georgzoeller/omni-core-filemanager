@@ -227,8 +227,8 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
     },
 
     getDisplayUrl(file, opts) {
-      console.log(file.mimeType)
-      if (!file) {
+
+      if (file == null || file == undefined || typeof(file) !== 'object') {
         return '/extensions/omni-core-filemanager/assets/404.png'
       }
       if (file?.mimeType?.startsWith('audio/') || file.mimeType == 'application/ogg') {
@@ -265,7 +265,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       if (file?.meta?.type === 'recipe') {
         return '/extensions/omni-core-filemanager/assets/recipe.png'
       }
-      console.log('Unknown display url for', Alpine.raw(file), file.mimeType)
+
       return '/extensions/omni-core-filemanager/assets/ph_250.png'
     },
 
