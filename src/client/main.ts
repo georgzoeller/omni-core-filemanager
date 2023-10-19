@@ -222,7 +222,7 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
       }
 
       //@ts-ignore
-      window.parent.client.runScript('run', args)
+      sdk.runClientScript('run', args)
 
     },
 
@@ -550,44 +550,9 @@ const createGallery = function (imagesPerPage: number, imageApi: string) {
 
           sdk.sendChatMessage(``, 'text/markdown', {
             ...obj, commands: [
-              { 'id': 'run', title: '🞂 Run', args: [null, { ...img }] }]
+              { 'id': 'run', title: 'Run', args: [null, { ...img }] }]
           }, ['no-picture'])
         }
-    },
-    async exportObject(img) {
-      const imageFid = img
-      const action = 'export'
-      let args = {}
-      //@ts-ignore
-      const workflow = await window.parent.client.workbench.toJSON()
-
-      if (!workflow) {
-        alert('No active workflow')
-      }
-      const payload = { imageFid, action, args, recipe:workflow }
-      const result = (<any>await sdk.runExtensionScript('export', payload))
-      if (result.ok) {
-        const resultObject = result.image
-        await downloadObject(resultObject)
-        await this.fetchObjects({replace:true, limit: imagesPerPage, expiryType: this.expiryType})
-      }
-      else
-      {
-        alert('Failed to export image: '+  result.reason)
-      }
-    },
-
-    async importObject(img) {
-
-      let args = {
-        action: 'import',
-        imageFid: img.fid,
-      }
-      const file = <any>(await sdk.runExtensionScript('export', args)).file
-      console.log('import', file)
-      window.parent.location.href = window.parent.location.protocol + "//" + window.parent.location.host + `/?rx=${encodeURIComponent(file.url)}`;
-
-
     },
     zoomObject(event) {
       // Determine whether the wheel was scrolled up or down

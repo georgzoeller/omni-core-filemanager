@@ -218,16 +218,6 @@
                   </svg>
                   <span>Download</span>
                 </a>
-                <button x-show="false && Resource.isImage(focusedObject)" @click="exportObject(focusedObject)"
-                  class="flex items-center justify-center w-auto h-8 px-3 py-1 gap-1 text-xs bg-transparent  rounded-md cursor-pointer  hover:bg-gray-500 active:bg-gray-600 focus:bg-gray-600 focus:outline-none text-neutral-500 hover:text-neutral-600 group">
-                  <svg class="w-5 h-5 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                    stroke-width="2" stroke="currentColor">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
-                  <span>Embedd Recipe In Image</span>
-                </button>
                 <span x-show="canEdit(focusedObject)" @click="runViewerAction(focusedObject,'edit')"
                   class="flex items-center justify-center w-auto h-8 px-3 py-1 gap-1 text-xs bg-transparent  rounded-md cursor-pointer  hover:bg-gray-500 active:bg-gray-600 focus:bg-gray-600 focus:outline-none text-neutral-500 hover:text-neutral-600 group">
                   <svg class="w-5 h-5 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -240,22 +230,6 @@
                   </svg>
                   <span>Edit</span>
                 </span>
-
-
-                <button x-show="false && Resource.isImage(focusedObject)" @click="importObject(focusedObject)"
-                  class="flex items-center justify-center w-auto h-8 px-3 py-1 gap-1 text-xs bg-transparent  rounded-md cursor-pointer  hover:bg-gray-500 active:bg-gray-600 focus:bg-gray-600 focus:outline-none text-neutral-500 hover:text-neutral-600 group">
-                  <svg class="w-5 h-5 stroke-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                    stroke-width="2" stroke="currentColor">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
-                  <span>Extract Recipe</span>
-                </button>
-
-
-
-
                 <div x-data="copyToClipboardComponent()" class="">
                   <button x-show="!focusedObject?.onclick" @click="copyToClipboard(focusedObject);"
                     class="flex items-center justify-center w-auto h-8 px-3 py-1 gap-1 text-xs bg-transparent  rounded-md cursor-pointer  hover:bg-gray-500 active:bg-gray-600 focus:bg-gray-600 focus:outline-none text-neutral-500 hover:text-neutral-600 group">
